@@ -43,8 +43,8 @@ const ShowtimesPage: React.FC = () => {
   return (
     <div className="showtimes-container">
   <div className="back-btn-container">
-        <button className="back-btn">Add a Movie➕</button>
-        <button className="back-btn" onClick={handleBack}>Back ➡️</button>
+        <button className="menu-btn">Add a Showtime ➕</button>
+        <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
 
       </div>
       <h1 className="showtimes-title">Showtimes 🕒</h1>
@@ -53,12 +53,13 @@ const ShowtimesPage: React.FC = () => {
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>Theather</TableCell>
-            <TableCell>Start Time</TableCell>
-            <TableCell>End Time</TableCell>
-            <TableCell>Price</TableCell>
-            <TableCell align="right">Delete</TableCell>
+            <TableCell><strong>Title</strong></TableCell>
+            <TableCell><strong>Theater</strong></TableCell>
+            <TableCell><strong>Start Time</strong></TableCell>
+            <TableCell><strong>End Time</strong></TableCell>
+            <TableCell><strong>Price</strong></TableCell>
+            <TableCell><strong>Order</strong></TableCell>
+            <TableCell align="right"><strong>Delete</strong></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -74,6 +75,7 @@ const ShowtimesPage: React.FC = () => {
               <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
               <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
               <TableCell>{showtime.price}₪</TableCell>
+              <TableCell>Buy tickets</TableCell>
               <TableCell align="right">
               <Tooltip title={<span>Delete</span>}>
                   <button className="delete-btn"  onClick={() => handleDelete(showtime.id)}>🗑️</button>

@@ -3,7 +3,7 @@
     text-align: center;
   }
   
-  .back-btn {
+  .main-btn {
     padding: 20px;
     background: none;
     border: none;
@@ -12,7 +12,10 @@
     transition: transform 0.2s;
     float: right;
   }
-  
+  .main-btn:hover{
+    transition: transform 0.2s;
+
+  }
   .showtimes-title {
     font-size: 2rem;
     margin-bottom: 20px;

@@ -1,5 +1,6 @@
-/* Container styling */
-.movies-container {
+
+
+.buttons-container {
   margin-top: 40px;
   padding: 20px;
 }
@@ -46,15 +47,21 @@
   justify-content: space-between; 
   padding: 10px;
 }
-.back-btn {
+.menu-btn {
+  padding: 20px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
   transition: transform 0.2s;
+  
 }
 
-/* Edit and delete buttons */
+.menu-btn:hover{
+  transform: scale(1.1);
+
+}
+
 .edit-btn, .delete-btn{
   background: none;
   border: none;

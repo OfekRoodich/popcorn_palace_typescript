@@ -38,13 +38,15 @@ const MoviesPage: React.FC = () => {
   };
 
   return (
-    <div className="movies-container">
+    <div className='movie-container'>
+
+    <div className="buttons-container">
         <div className="back-btn-container">
-            <button className="back-btn">Add a Movie➕</button>
-            <button className="back-btn" onClick={handleBack}>Back ➡️</button>
+            <button className="menu-btn">Add a Movie➕</button>
+            <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
         </div>
 
-      <h1 className="movies-title">Movies 🎥</h1>
+      <h1 className="movies-title">Now in theaters 🎥</h1>
       <div className="movies-row">
         {movies.map(movie => (
           <div key={movie.id} className="movie-card">
@@ -68,6 +70,8 @@ const MoviesPage: React.FC = () => {
         ))}
       </div>
     </div>
+    </div>
+
   );
 };
 
