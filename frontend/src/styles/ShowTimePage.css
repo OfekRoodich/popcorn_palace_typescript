@@ -43,4 +43,12 @@
   .showtime-card p {
     margin: 5px 0;
   }
-  
+  .buy-tickets-btn {
+    text-align: right; /* ✅ Aligns text to the right */
+    padding-right: 10px; /* Optional: Adjust spacing */
+}
+
+.buy-tickets-text {
+    color: rgb(0, 21, 255);
+    text-decoration: underline;
+}

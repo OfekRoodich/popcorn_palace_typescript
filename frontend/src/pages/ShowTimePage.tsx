@@ -68,17 +68,24 @@ const ShowtimesPage: React.FC = () => {
               <TableCell><strong>Start Time</strong></TableCell>
               <TableCell><strong>End Time</strong></TableCell>
               <TableCell><strong>Price</strong></TableCell>
+              <TableCell><strong>Book Tickets</strong></TableCell>
+              <TableCell  align="right"><strong>Edit</strong></TableCell>
               <TableCell align="right"><strong>Delete</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {showtimes.map((showtime) => (
+            {showtimes.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map((showtime) => (
               <TableRow key={showtime.id}>
                 <TableCell>{showtime.movie.title}</TableCell>
                 <TableCell>{showtime.theater}</TableCell>
                 <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
                 <TableCell>{new Date(showtime.endTime).toLocaleString()}</TableCell>
                 <TableCell>{showtime.price}₪</TableCell>
+                <TableCell className="buy-tickets-button">
+                  <p className="buy-tickets-text">
+                  Buy Tickets
+                    </p></TableCell>
+                <TableCell  align="right">✏️</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Delete">
                     <button className="delete-btn" onClick={() => handleDelete(showtime.id)}>🗑️</button>
