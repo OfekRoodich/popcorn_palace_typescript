@@ -65,7 +65,7 @@ const MoviesPage: React.FC = () => {
 
   return (
     <div className="movie-container">
-  {(showAddModal || showEditModal) && <div className="page-overlay"></div>}  {/* ✅ Fades background for both modals */}
+  {(showAddModal || showEditModal) && <div className="page-overlay"></div>}  
   
   <div className="buttons-container">
     <div className="back-btn-container">

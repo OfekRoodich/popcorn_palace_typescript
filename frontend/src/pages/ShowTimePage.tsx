@@ -10,13 +10,17 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip"; 
-import AddShowtimeModal from "./AddShowtimeModal"; // Import Add Showtime Modal
+import AddShowtimeModal from "./AddShowtimeModal"; 
+import EditShowtimeModal from "./EditShowtimeModal"; 
+
 
 const ShowtimesPage: React.FC = () => {
   const [showtimes, setShowtimes] = useState<
     { id: number; movie: { id: number; title: string }; theater: string; startTime: string; endTime: string; price: number }[]
   >([]);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+const [selectedShowtime, setSelectedShowtime] = useState<any>(null)
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +32,10 @@ const ShowtimesPage: React.FC = () => {
   const handleBack = () => {
     navigate("/");
   };
-
+  const handleEdit = (showtime: any) => {
+    setSelectedShowtime(showtime);
+    setShowEditModal(true);
+  };
   const handleDelete = (id: number) => {
     const isConfirmed = window.confirm("Are you sure you want to delete this showtime?");
     if (isConfirmed) {
@@ -39,7 +46,15 @@ const ShowtimesPage: React.FC = () => {
         .catch(error => console.error('Error deleting showtime:', error));
     }
   };
-
+  const handleUpdateShowtime = (updatedShowtime: any) => {
+    axios
+      .put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${updatedShowtime.id}`, updatedShowtime)
+      .then(() => {
+        setShowtimes(showtimes.map((st) => (st.id === updatedShowtime.id ? updatedShowtime : st)));
+        setShowEditModal(false);
+      })
+      .catch((error) => console.error("Error updating showtime:", error));
+  };
   const handleAddShowtime = (newShowtime: any) => {
 
     axios
@@ -53,7 +68,7 @@ const ShowtimesPage: React.FC = () => {
 
   return (
     <div className="showtimes-container">
-      {showModal && <div className="page-overlay"></div>}
+      {(showModal ||showEditModal) && <div className="page-overlay"></div>}
       <div className="back-btn-container">
         <button className="menu-btn" onClick={() => setShowModal(true)}>Add a Showtime ➕</button>
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
@@ -84,8 +99,12 @@ const ShowtimesPage: React.FC = () => {
                 <TableCell className="buy-tickets-button">
                   <p className="buy-tickets-text">
                   Buy Tickets
-                    </p></TableCell>
-                <TableCell  align="right">✏️</TableCell>
+                    </p></TableCell >
+                    <TableCell align="right">
+                  <Tooltip title="Edit">
+                    <button className="edit-btn"  onClick={() => handleEdit(showtime)}>✏️</button>
+                  </Tooltip>
+                </TableCell>
                 <TableCell align="right">
                   <Tooltip title="Delete">
                     <button className="delete-btn" onClick={() => handleDelete(showtime.id)}>🗑️</button>
@@ -98,6 +117,9 @@ const ShowtimesPage: React.FC = () => {
       </TableContainer>
 
       <AddShowtimeModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddShowtime} />
+      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} 
+  showtime={selectedShowtime} 
+/>
     </div>
   );
 };

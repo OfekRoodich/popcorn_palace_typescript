@@ -52,3 +52,7 @@
     color: rgb(0, 21, 255);
     text-decoration: underline;
 }
+
+.edit-btn{
+  align-items: center;
+}
