@@ -19,8 +19,17 @@ export class ShowtimesService {
   }
 
   async create(showtime: Partial<Showtime>): Promise<Showtime> {
-    return this.showtimeRepository.save(showtime);
+    console.log(`🚀 ${JSON.stringify(showtime, null, 2)}`);
+    
+    const savedShowtime = await this.showtimeRepository.save(showtime);
+  
+    // ✅ Fetch the full showtime with the related movie
+    return this.showtimeRepository.findOne({
+      where: { id: savedShowtime.id },
+      relations: ['movie'],
+    });
   }
+  
 
   async update(id: number, showtime: Partial<Showtime>): Promise<any> {
     return this.showtimeRepository.update(id, showtime);
