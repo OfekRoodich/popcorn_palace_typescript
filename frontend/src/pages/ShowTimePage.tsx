@@ -29,6 +29,17 @@ const ShowtimesPage: React.FC = () => {
     navigate('/'); // Navigate to Home Page
   };
 
+  const handleDelete = (id: number) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this movie?");
+    if (isConfirmed) {
+      axios.delete(`${process.env.REACT_APP_API_BASE_URL}/movies/${id}`)
+        .then(() => {
+          setShowtimes(showtimes.filter(showtime => showtime.id !== id));
+        })
+        .catch(error => console.error('Error deleting movie:', error));
+    }
+  };
+
   return (
     <div className="showtimes-container">
   <div className="back-btn-container">
@@ -65,7 +76,7 @@ const ShowtimesPage: React.FC = () => {
               <TableCell>{showtime.price}₪</TableCell>
               <TableCell align="right">
               <Tooltip title={<span>Delete</span>}>
-                  <button className="delete-btn">🗑️</button>
+                  <button className="delete-btn"  onClick={() => handleDelete(showtime.id)}>🗑️</button>
               </Tooltip>
              </TableCell>
             </TableRow>
