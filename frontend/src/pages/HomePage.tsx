@@ -3,7 +3,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
 import '../styles/HomePage.css'; 
 
-
 const HomePage: React.FC = () => {
   return (
     <div className="home-container">

@@ -1,64 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import '../styles/MoviesPage.css'; 
-import { useNavigate } from 'react-router-dom';
-
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "../styles/MoviesPage.css";
+import Tooltip from "@mui/material/Tooltip";
+import { useNavigate } from "react-router-dom";
+import AddMovieModal from "./AddMovieModal";
+import EditMovieModal from "./EditMovieModal"; // Import the Edit Modal
 
 const MoviesPage: React.FC = () => {
-  const [movies, setMovies] = useState<{ id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number }[]>([]);
-  const navigate = useNavigate(); // Initialize navigation
+  const [movies, setMovies] = useState<
+    { id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number }[]
+  >([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<any>(null); // Track movie being edited
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
-      .then(response => setMovies(response.data))
-      .catch(error => console.error('Error fetching movies:', error));
+    axios
+      .get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
+      .then((response) => setMovies(response.data))
+      .catch((error) => console.error("Error fetching movies:", error));
   }, []);
 
   const handleBack = () => {
-    navigate('/'); // Navigate to Home Page
+    navigate("/");
   };
 
-  // Handle delete movie with confirmation popup
   const handleDelete = (id: number) => {
     const isConfirmed = window.confirm("Are you sure you want to delete this movie?");
     if (isConfirmed) {
-      axios.delete(`${process.env.REACT_APP_API_BASE_URL}/movies/${id}`)
+      axios
+        .delete(`${process.env.REACT_APP_API_BASE_URL}/movies/${id}`)
         .then(() => {
-          setMovies(movies.filter(movie => movie.id !== id));
+          setMovies(movies.filter((movie) => movie.id !== id));
         })
-        .catch(error => console.error('Error deleting movie:', error));
+        .catch((error) => console.error("Error deleting movie:", error));
     }
   };
 
-  // Handle edit movie (extend with form if needed)
-  const handleEdit = (id: number) => {
-    console.log(`Edit movie with ID: ${id}`);
-    // Implement edit logic here
+  const handleEdit = (movie: any) => {
+    setSelectedMovie(movie); // Store the movie being edited
+    setShowEditModal(true); // Show the edit modal
+  };
+
+  const handleUpdateMovie = (updatedMovie: any) => {
+    axios
+      .put(`${process.env.REACT_APP_API_BASE_URL}/movies/${updatedMovie.id}`, updatedMovie)
+      .then(() => {
+        setMovies(movies.map((movie) => (movie.id === updatedMovie.id ? updatedMovie : movie)));
+        setShowEditModal(false);
+      })
+      .catch((error) => console.error("Error updating movie:", error));
+  };
+
+  const handleAddMovie = (newMovie: any) => {
+    axios
+      .post(`${process.env.REACT_APP_API_BASE_URL}/movies`, newMovie)
+      .then((response) => {
+        setMovies([...movies, response.data]);
+        setShowAddModal(false);
+      })
+      .catch((error) => console.error("Error adding movie:", error));
   };
 
   return (
-    <div className="movies-container">
-            <div className="back-btn-container">
-        <button className="back-btn" onClick={handleBack}>Back ➡️</button>
-      </div>
-      <h1 className="movies-title">Movies List 🎥</h1>
-      <div className="movies-row">
-        {movies.map(movie => (
-          <div key={movie.id} className="movie-card">
-            <div className="movie-card-header">
-              <button className="edit-btn" onClick={() => handleEdit(movie.id)}>✏️</button>
-              <button className="delete-btn" onClick={() => handleDelete(movie.id)}>🗑️</button>
+    <div className="movie-container">
+      {showAddModal && <div className="page-overlay"></div>}
+      <div className="buttons-container">
+        <div className="back-btn-container">
+          <button className="menu-btn" onClick={() => setShowAddModal(true)}>
+            Add a Movie➕
+          </button>
+          <button className="menu-btn" onClick={handleBack}>
+            Back ➡️
+          </button>
+        </div>
+        <h1 className="movies-title">Now in theaters 🎥</h1>
+        <div className="movies-row">
+          {movies.sort((a, b) => a.title.localeCompare(b.title)).map((movie) => (
+            <div key={movie.id} className="movie-card">
+              <div className="movie-card-header">
+                <Tooltip title="Edit">
+                  <button className="edit-btn" onClick={() => handleEdit(movie)}>✏️</button>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <button className="delete-btn" onClick={() => handleDelete(movie.id)}>🗑️</button>
+                </Tooltip>
+              </div>
+              <div className="card-body">
+                <h5 className="movie-card-title">{movie.title}</h5>
+                <p className="movie-card-text"><strong>Genre:</strong> {movie.genre}</p>
+                <p className="movie-card-text"><strong>Duration:</strong> {movie.duration} min</p>
+                <p className="movie-card-text"><strong>Rating:</strong> {movie.rating} ⭐</p>
+                <p className="movie-card-text"><strong>Year:</strong> {movie.releaseYear}</p>
+              </div>
             </div>
-            <div className="card-body">
-              <h5 className="movie-card-title">{movie.title}</h5>
-              <p className="movie-card-text"><strong>Genre:</strong> {movie.genre}</p>
-              <p className="movie-card-text"><strong>Duration:</strong> {movie.duration} min</p>
-              <p className="movie-card-text"><strong>Rating:</strong> {movie.rating} ⭐</p>
-              <p className="movie-card-text"><strong>Year:</strong> {movie.releaseYear}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
+
+      <AddMovieModal show={showAddModal} handleClose={() => setShowAddModal(false)} handleSave={handleAddMovie} />
+
+      <EditMovieModal 
+        show={showEditModal} 
+        handleClose={() => setShowEditModal(false)} 
+        handleUpdate={handleUpdateMovie} 
+        movie={selectedMovie} 
+      />
     </div>
   );
 };

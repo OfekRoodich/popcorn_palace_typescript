@@ -1,0 +1,25 @@
+.save-btn:disabled{
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: rgb(83, 85, 83);
+    cursor: default
+}
+
+.save-btn:not(:disabled):hover{
+    color: rgb(21, 126, 11);
+    transform: scale(1.1);
+}
+.cancel-btn{
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.cancel-btn:hover{
+    color: red;
+    transform: scale(1.1);
+}

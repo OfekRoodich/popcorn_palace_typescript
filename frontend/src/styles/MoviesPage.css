@@ -1,5 +1,5 @@
-/* Container styling */
-.movies-container {
+
+.buttons-container {
   margin-top: 40px;
   padding: 20px;
 }
@@ -36,26 +36,32 @@
   display: flex;
   justify-content: space-between;
   padding: 5px;
-  position: absolute;
+  position: relative;
   top: 5px;
   right: 5px;
   left: 5px;
+  bottom: 5px;
 }
 .back-btn-container {
   display: flex;
-  justify-content: flex-end; /* Moves button to the right */
+  justify-content: space-between; 
   padding: 10px;
 }
-
-.back-btn {
+.menu-btn {
+  padding: 20px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
   transition: transform 0.2s;
+  
 }
 
-/* Edit and delete buttons */
+.menu-btn:hover{
+  transform: scale(1.1);
+
+}
+
 .edit-btn, .delete-btn{
   background: none;
   border: none;
@@ -103,4 +109,15 @@
   .movies-row {
     grid-template-columns: repeat(1, 1fr);
   }
+}
+
+.page-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.7); /* Dark background */
+  z-index: 1000; /* Lower than modal but higher than page */
+  backdrop-filter: blur(5px); /* Optional: Slight blur effect */
 }
