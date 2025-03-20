@@ -1,7 +1,8 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
-import '../styles/HomePage.css'; // Ensure CSS is imported
+import '../styles/HomePage.css'; 
+
 
 const HomePage: React.FC = () => {
   return (

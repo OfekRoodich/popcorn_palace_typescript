@@ -1,23 +1,106 @@
-import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
-import '../styles/HomePage.css'; // Import the CSS file
+/* Container styling */
+.movies-container {
+  margin-top: 40px;
+  padding: 20px;
+}
 
-const HomePage: React.FC = () => {
-  return (
-    <div className="home-container">
-      <div className="overlay">
-        <h1 className="title">Welcome to Popcorn Palace 🎬</h1>
-        <nav>
-          <ul className="nav-links">
-            <li><Link to="/movies">🎥 Movies</Link></li>
-            <li><Link to="/showtimes">🕒 Showtimes</Link></li>
-            <li><Link to="/booking">🎟️ Book a Ticket</Link></li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  );
-};
+/* Centers the title */
+.movies-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-export default HomePage;
+/* Grid layout for 4 per row */
+.movies-row {
+  padding: 40px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  justify-items: center;
+}
+
+/* Individual movie card */
+.movie-card {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+  width: 100%;
+  position: relative;
+}
+
+/* Card header for buttons */
+.movie-card-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  left: 5px;
+}
+.back-btn-container {
+  display: flex;
+  justify-content: flex-end; /* Moves button to the right */
+  padding: 10px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+/* Edit and delete buttons */
+.edit-btn, .delete-btn{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+/* Hover effect for buttons */
+.edit-btn:hover {
+  color: blue;
+  transform: scale(1.1);
+}
+
+.delete-btn:hover {
+  color: red;
+  transform: scale(1.1);
+}
+
+/* Lift effect on hover */
+.movie-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Card text */
+.movie-card-text {
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .movies-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .movies-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .movies-row {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}

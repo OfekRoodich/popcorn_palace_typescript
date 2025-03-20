@@ -28,6 +28,7 @@
 
 
 .overlay {
+  background: rgba(80, 61, 245, 0.1);
   padding: 60px;
   border-radius: 15px;
   width: 100%;
@@ -54,7 +55,7 @@
 }
 
 .nav-links .btn {
-  width: 250px; /* Make buttons the same size */
+  width: 250px; 
   text-align: center;
   font-size: 1.2rem;
   font-weight: bold;
