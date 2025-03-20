@@ -43,10 +43,9 @@
 }
 .back-btn-container {
   display: flex;
-  justify-content: flex-end; /* Moves button to the right */
+  justify-content: space-between; 
   padding: 10px;
 }
-
 .back-btn {
   background: none;
   border: none;

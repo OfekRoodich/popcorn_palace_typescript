@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../styles/MoviesPage.css'; 
+import Tooltip from '@mui/material/Tooltip'; 
 import { useNavigate } from 'react-router-dom';
 
 
@@ -38,16 +39,23 @@ const MoviesPage: React.FC = () => {
 
   return (
     <div className="movies-container">
-            <div className="back-btn-container">
-        <button className="back-btn" onClick={handleBack}>Back ➡️</button>
-      </div>
-      <h1 className="movies-title">Movies List 🎥</h1>
+        <div className="back-btn-container">
+            <button className="back-btn">Add a Movie➕</button>
+            <button className="back-btn" onClick={handleBack}>Back ➡️</button>
+        </div>
+
+      <h1 className="movies-title">Movies 🎥</h1>
       <div className="movies-row">
         {movies.map(movie => (
           <div key={movie.id} className="movie-card">
             <div className="movie-card-header">
+            <Tooltip title={<span>Edit</span>}>
               <button className="edit-btn" onClick={() => handleEdit(movie.id)}>✏️</button>
+            </Tooltip>
+            <Tooltip title={<span>Delete</span>}>
               <button className="delete-btn" onClick={() => handleDelete(movie.id)}>🗑️</button>
+            </Tooltip>
+
             </div>
             <div className="card-body">
               <h5 className="movie-card-title">{movie.title}</h5>

@@ -9,11 +9,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import Tooltip from '@mui/material/Tooltip'; 
+
 
 
 const ShowtimesPage: React.FC = () => {
   const [showtimes, setShowtimes] = useState<
-    { id: number; movieId: number; theater: string; startTime: string, endTime: string, price: number }[]
+    { id: number; movie: { title: string }; theater: string; startTime: string, endTime: string, price: number }[]
   >([]);
 
   const navigate = useNavigate(); // For navigating back
@@ -23,20 +25,29 @@ const ShowtimesPage: React.FC = () => {
       .then(response => setShowtimes(response.data))
       .catch(error => console.error('Error fetching showtimes:', error));
   }, []);
+  const handleBack = () => {
+    navigate('/'); // Navigate to Home Page
+  };
 
   return (
     <div className="showtimes-container">
-      <button className="back-btn" onClick={() => navigate('/')}>🔙 Back</button>
-      <h1 className="showtimes-title">Showtimes 🎭</h1>
+  <div className="back-btn-container">
+        <button className="back-btn">Add a Movie➕</button>
+        <button className="back-btn" onClick={handleBack}>Back ➡️</button>
+
+      </div>
+      <h1 className="showtimes-title">Showtimes 🕒</h1>
+      <div>
       <TableContainer component={Paper}>
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
             <TableCell>Title</TableCell>
-            <TableCell align="right">Theather</TableCell>
-            <TableCell align="right">Start Time</TableCell>
-            <TableCell align="right">End Time</TableCell>
-            <TableCell align="right">Price</TableCell>
+            <TableCell>Theather</TableCell>
+            <TableCell>Start Time</TableCell>
+            <TableCell>End Time</TableCell>
+            <TableCell>Price</TableCell>
+            <TableCell align="right">Delete</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -46,17 +57,23 @@ const ShowtimesPage: React.FC = () => {
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {showtime.movieId}
+              {showtime.movie.title}
               </TableCell>
-              <TableCell align="right">{showtime.theater}</TableCell>
-              <TableCell align="right">{showtime.startTime}</TableCell>
-              <TableCell align="right">{showtime.endTime}</TableCell>
-              <TableCell align="right">{showtime.price}₪</TableCell>
+              <TableCell>{showtime.theater}</TableCell>
+              <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
+              <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
+              <TableCell>{showtime.price}₪</TableCell>
+              <TableCell align="right">
+              <Tooltip title={<span>Delete</span>}>
+                  <button className="delete-btn">🗑️</button>
+              </Tooltip>
+             </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
+    </div>
     </div>
   );
 };
