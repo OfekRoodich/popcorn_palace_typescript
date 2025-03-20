@@ -11,11 +11,11 @@ export class ShowtimesService {
   ) {}
 
   async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find({ relations: ['movie'] });
+    return this.showtimeRepository.find({ relations: ['movie', 'theater'] });
   }
 
   async findById(id: number): Promise<Showtime> {
-    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie'] });
+    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
   }
 
   async create(showtime: Partial<Showtime>): Promise<Showtime> {

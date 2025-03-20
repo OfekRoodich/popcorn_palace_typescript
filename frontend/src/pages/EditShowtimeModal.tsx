@@ -6,8 +6,8 @@ import axios from "axios";
 interface EditShowtimeModalProps {
   show: boolean;
   handleClose: () => void;
-  handleUpdate: (updatedShowtime: { id: number; movieId: number; theater: string; startTime: string; endTime: string; price: number }) => void;
-  showtime: { id: number; movie: { id: number; title: string }; theater: string; startTime: string; endTime: string; price: number } | null;
+  handleUpdate: (updatedShowtime: { id: number; movieId: number; theater: string; startTime: string; price: number }) => void;
+  showtime: { id: number; movie: { id: number; title: string }; theater: string; startTime: string; price: number } | null;
 }
 
 const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose, handleUpdate, showtime }) => {
@@ -16,7 +16,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
     movieId: "",
     theater: "",
     startTime: "",
-    endTime: "",
     price: "",
   });
 
@@ -36,7 +35,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
         movieId: showtime.movie.id.toString(),
         theater: showtime.theater,
         startTime: showtime.startTime,
-        endTime: showtime.endTime,
         price: showtime.price.toString(),
       });
     }
@@ -60,7 +58,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
       movieId: parseInt(showtimeData.movieId, 10) || 0,
       theater: showtimeData.theater,
       startTime: showtimeData.startTime,
-      endTime: showtimeData.endTime,
       price: parseFloat(showtimeData.price),
     });
 
@@ -93,10 +90,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
               <div className="form-group">
                 <label>Start Time</label>
                 <input type="datetime-local" className="form-control" name="startTime" value={showtimeData.startTime} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>End Time</label>
-                <input type="datetime-local" className="form-control" name="endTime" value={showtimeData.endTime} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label>Price</label>

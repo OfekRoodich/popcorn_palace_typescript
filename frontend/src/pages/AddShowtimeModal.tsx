@@ -6,7 +6,7 @@ import axios from "axios";
 interface AddShowtimeModalProps {
   show: boolean;
   handleClose: () => void;
-  handleSave: (showtime: { movieId: number; theater: string; startTime: string; endTime: string; price: number }) => void;
+  handleSave: (showtime: { movieId: number; theater: string; startTime: string; price: number }) => void;
 }
 
 const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave }) => {
@@ -15,7 +15,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
     movieId: "",
     theater: "",
     startTime: "",
-    endTime: "",
     price: "",
   });
 
@@ -46,7 +45,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       movieId: parseInt(showtimeData.movieId, 10) || 0,
       theater: showtimeData.theater,
       startTime: showtimeData.startTime,
-      endTime: showtimeData.endTime,
       price: parseFloat(showtimeData.price),
     });
 
@@ -80,10 +78,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
               <div className="form-group">
                 <label>Start Time</label>
                 <input type="datetime-local" className="form-control" name="startTime" value={showtimeData.startTime} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>End Time</label>
-                <input type="datetime-local" className="form-control" name="endTime" value={showtimeData.endTime} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label>Price</label>

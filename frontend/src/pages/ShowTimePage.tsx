@@ -16,7 +16,7 @@ import EditShowtimeModal from "./EditShowtimeModal";
 
 const ShowtimesPage: React.FC = () => {
   const [showtimes, setShowtimes] = useState<
-    { id: number; movie: { id: number; title: string }; theater: string; startTime: string; endTime: string; price: number }[]
+    { id: number; movie: { id: number; title: string,duration:number}; theater: { id: number; name: string}; startTime: string; endTime: string; price: number }[]
   >([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -92,9 +92,11 @@ const [selectedShowtime, setSelectedShowtime] = useState<any>(null)
             {showtimes.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map((showtime) => (
               <TableRow key={showtime.id}>
                 <TableCell>{showtime.movie.title}</TableCell>
-                <TableCell>{showtime.theater}</TableCell>
+                <TableCell>{showtime.theater?.name || 'Unknown Theater'}</TableCell>
                 <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
-                <TableCell>{new Date(showtime.endTime).toLocaleString()}</TableCell>
+                <TableCell>
+                  {new Date(new Date(showtime.startTime).getTime() + showtime.movie.duration * 60000).toLocaleString()}
+                </TableCell>
                 <TableCell>{showtime.price}₪</TableCell>
                 <TableCell className="buy-tickets-button">
                   <p className="buy-tickets-text">
