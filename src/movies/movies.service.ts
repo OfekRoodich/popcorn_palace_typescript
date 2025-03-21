@@ -13,7 +13,11 @@ export class MoviesService {
   findAll(): Promise<Movie[]> {
     return this.movieRepository.find();
   }
-
+  
+  findOne(id: number): Promise<Movie | null> {
+    return this.movieRepository.findOne({ where: { id } });
+  }
+  
   create(movie: Partial<Movie>): Promise<Movie> {
     return this.movieRepository.save(movie);
   }

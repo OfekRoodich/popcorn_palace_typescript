@@ -25,4 +25,8 @@ export class MoviesController {
   delete(@Param('id') id: number) {
     return this.moviesService.delete(id);
   }
+  @Get(':id')
+  findOne(@Param('id') id: number): Promise<Movie | null> {
+    return this.moviesService.findOne(id);
+  }
 }

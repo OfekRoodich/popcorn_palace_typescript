@@ -12,7 +12,7 @@ export class ShowtimesService {
 
   async findAll(): Promise<Showtime[]> {
     return this.showtimeRepository.find({
-      relations: ['movie', 'theater'], // ✅ Make sure 'theater' is included
+      relations: ['movie', 'theater'], 
     });
   }
   
@@ -35,8 +35,18 @@ export class ShowtimesService {
     return fullShowtime;
   }
   
+  async findAllForTheater(theaterId: number): Promise<Showtime[]> {
+    console.log("🔍 Filtering showtimes by theater ID:", theaterId);
   
-
+    return this.showtimeRepository
+      .createQueryBuilder("showtime")
+      .leftJoinAndSelect("showtime.movie", "movie")
+      .leftJoinAndSelect("showtime.theater", "theater")
+      .where("theater.id = :theaterId", { theaterId })
+      .getMany();
+  }
+  
+  
   async update(id: number, showtime: Partial<Showtime>): Promise<any> {
     return this.showtimeRepository.update(id, showtime);
   }

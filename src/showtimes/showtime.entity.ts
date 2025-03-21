@@ -18,9 +18,6 @@ export class Showtime {
   @JoinColumn({ name: 'movieId' })
   movie: Movie;
 
-  @Column()
-  theaterId: number; 
-
   @ManyToOne(() => Theater, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'theaterId' })
   theater: Theater;
@@ -28,4 +25,3 @@ export class Showtime {
   @Column('timestamp')
   startTime: Date;
 }
-
