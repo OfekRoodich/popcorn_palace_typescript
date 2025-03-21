@@ -11,7 +11,7 @@ const HomePage: React.FC = () => {
           <ul className="nav-links">
             <li><Link to="/movies">🎥 Movies</Link></li>
             <li><Link to="/showtimes">🕒 Showtimes</Link></li>
-            <li><Link to="/booking">🎟️ Book a Ticket</Link></li>
+            <li><Link to="/theaters">Theaters 🎦</Link></li>
           </ul>
         </nav>
       </div>

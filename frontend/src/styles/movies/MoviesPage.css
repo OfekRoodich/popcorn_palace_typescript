@@ -4,13 +4,11 @@
   padding: 20px;
 }
 
-/* Centers the title */
 .movies-title {
   text-align: center;
   margin-bottom: 20px;
 }
 
-/* Grid layout for 4 per row */
 .movies-row {
   padding: 40px;
   display: grid;
@@ -19,7 +17,6 @@
   justify-items: center;
 }
 
-/* Individual movie card */
 .movie-card {
   background-color: white;
   padding: 15px;
@@ -31,7 +28,6 @@
   position: relative;
 }
 
-/* Card header for buttons */
 .movie-card-header {
   display: flex;
   justify-content: space-between;

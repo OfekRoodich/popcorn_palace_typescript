@@ -1,5 +1,12 @@
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;}
+
+.modal-backdrop.show {
+    background-color: rgba(255, 255, 255, 0.75) ; 
+}
+
 .save-btn:disabled{
-    background: none;
+     background: none;
     border: none;
     cursor: pointer;
     font-size: 1.2rem;
@@ -9,9 +16,8 @@
 
 .save-btn:not(:disabled):hover{
     color: rgb(21, 126, 11);
-    transform: scale(1.1);
 }
-.cancel-btn{
+.cancel-btn,.save-btn{
     background: none;
     border: none;
     cursor: pointer;
@@ -22,4 +28,17 @@
 .cancel-btn:hover{
     color: red;
     transform: scale(1.1);
+}
+
+
+.modal-footer{
+    justify-content: space-between;
+}
+
+.form-control{
+    border-radius: 20px;
+}
+
+.modal-content{
+    border-radius: 20px;
 }

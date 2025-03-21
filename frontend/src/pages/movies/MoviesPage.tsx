@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/MoviesPage.css";
+import "../../styles/movies/MoviesPage.css";
 import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import AddMovieModal from "./AddMovieModal";
-import EditMovieModal from "./EditMovieModal"; // Import the Edit Modal
+import EditMovieModal from "./EditMovieModal"; 
 
 const MoviesPage: React.FC = () => {
   const [movies, setMovies] = useState<
@@ -39,8 +39,8 @@ const MoviesPage: React.FC = () => {
   };
 
   const handleEdit = (movie: any) => {
-    setSelectedMovie(movie); // Store the movie being edited
-    setShowEditModal(true); // Show the edit modal
+    setSelectedMovie(movie);
+    setShowEditModal(true);
   };
 
   const handleUpdateMovie = (updatedMovie: any) => {
@@ -65,39 +65,37 @@ const MoviesPage: React.FC = () => {
 
   return (
     <div className="movie-container">
-      {showAddModal && <div className="page-overlay"></div>}
-      <div className="buttons-container">
-        <div className="back-btn-container">
-          <button className="menu-btn" onClick={() => setShowAddModal(true)}>
-            Add a Movie➕
-          </button>
-          <button className="menu-btn" onClick={handleBack}>
-            Back ➡️
-          </button>
+  {(showAddModal || showEditModal) && <div className="page-overlay"></div>}  
+  
+  <div className="buttons-container">
+    <div className="back-btn-container">
+      <button className="menu-btn" onClick={() => setShowAddModal(true)}>Add a Movie➕</button>
+      <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
+    </div>
+  </div>
+
+  <h1 className="movies-title">Now in theaters 🎥</h1>
+  <div className="movies-row">
+    {movies.sort((a, b) => a.title.localeCompare(b.title)).map((movie) => (
+      <div key={movie.id} className="movie-card">
+        <div className="movie-card-header">
+          <Tooltip title="Edit">
+            <button className="edit-btn" onClick={() => handleEdit(movie)}>✏️</button>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <button className="delete-btn" onClick={() => handleDelete(movie.id)}>🗑️</button>
+          </Tooltip>
         </div>
-        <h1 className="movies-title">Now in theaters 🎥</h1>
-        <div className="movies-row">
-          {movies.sort((a, b) => a.title.localeCompare(b.title)).map((movie) => (
-            <div key={movie.id} className="movie-card">
-              <div className="movie-card-header">
-                <Tooltip title="Edit">
-                  <button className="edit-btn" onClick={() => handleEdit(movie)}>✏️</button>
-                </Tooltip>
-                <Tooltip title="Delete">
-                  <button className="delete-btn" onClick={() => handleDelete(movie.id)}>🗑️</button>
-                </Tooltip>
-              </div>
-              <div className="card-body">
-                <h5 className="movie-card-title">{movie.title}</h5>
-                <p className="movie-card-text"><strong>Genre:</strong> {movie.genre}</p>
-                <p className="movie-card-text"><strong>Duration:</strong> {movie.duration} min</p>
-                <p className="movie-card-text"><strong>Rating:</strong> {movie.rating} ⭐</p>
-                <p className="movie-card-text"><strong>Year:</strong> {movie.releaseYear}</p>
-              </div>
-            </div>
-          ))}
+        <div className="card-body">
+          <h5 className="movie-card-title">{movie.title}</h5>
+          <p className="movie-card-text"><strong>Genre:</strong> {movie.genre}</p>
+          <p className="movie-card-text"><strong>Duration:</strong> {movie.duration} min</p>
+          <p className="movie-card-text"><strong>Rating:</strong> {movie.rating} ⭐</p>
+          <p className="movie-card-text"><strong>Year:</strong> {movie.releaseYear}</p>
         </div>
       </div>
+    ))}
+  </div>
 
       <AddMovieModal show={showAddModal} handleClose={() => setShowAddModal(false)} handleSave={handleAddMovie} />
 

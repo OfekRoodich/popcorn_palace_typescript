@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../styles/EditMovieModal.css";
+import "../../styles/movies/EditMovieModal.css";
 
 interface EditMovieModalProps {
   show: boolean;
@@ -17,6 +17,8 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
     rating: "",
     releaseYear: "",
   });
+  const [errorMessage, setErrorMessage] = useState("");
+  
 
   // Fill existing movie details when the modal opens
   useEffect(() => {
@@ -34,13 +36,14 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setMovieData((prev) => ({ ...prev, [name]: value }));
+    setErrorMessage(""); // Reset error when input changes
   };
 
   const isFormInvalid = Object.values(movieData).some((value) => value === "");
 
   const handleSubmit = () => {
     if (isFormInvalid) {
-      alert("❌ All fields must be filled before saving.");
+      setErrorMessage("❌ All fields must be filled before saving");
       return;
     }
 

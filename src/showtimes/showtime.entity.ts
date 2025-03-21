@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn,ManyToMany,JoinTable } from 'typeorm';
 
 import { Movie } from '../movies/movie.entity';
+import { Theater } from '../theaters/theater.entity';
 
 @Entity()
 export class Showtime {
@@ -10,18 +11,17 @@ export class Showtime {
   @Column('decimal')
   price: number;
 
-  @Column({ nullable: false })  // ✅ Explicitly define `movieId` as a column
-  movieId: number;
+  @Column()
+  movieId: number; 
 
   @ManyToOne(() => Movie, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'movieId' })  // ✅ Ensure `movieId` is properly mapped
+  @JoinColumn({ name: 'movieId' })
   movie: Movie;
-  @Column()
-  theater: string;
+
+  @ManyToOne(() => Theater, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'theaterId' })
+  theater: Theater;
 
   @Column('timestamp')
   startTime: Date;
-
-  @Column('timestamp')
-  endTime: Date;
 }

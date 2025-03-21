@@ -4,7 +4,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MoviesModule } from './movies/movies.module';
 import { ShowtimesModule } from './showtimes/showtimes.module';
-import { BookingsModule } from './bookings/bookings.module';
+import { TheatersModule } from './theaters/theaters.module';
+import { Theater } from './theaters/theater.entity';
+import { Showtime } from './showtimes/showtime.entity';
+import { Movie } from './movies/movie.entity';
 
 @Module({
   imports: [
@@ -16,11 +19,12 @@ import { BookingsModule } from './bookings/bookings.module';
       password: 'popcorn-palace',
       database: 'popcorn-palace',
       autoLoadEntities: true,
+      entities: [Theater, Showtime, Movie],
       synchronize: true,
     }),
     MoviesModule,
     ShowtimesModule,
-    BookingsModule,
+    TheatersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

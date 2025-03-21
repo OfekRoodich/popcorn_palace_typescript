@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
 import { Showtime } from './showtime.entity';
 
@@ -7,9 +7,16 @@ export class ShowtimesController {
   constructor(private readonly showtimesService: ShowtimesService) {}
 
   @Get()
-  findAll(): Promise<Showtime[]> {
+  findAll(@Query('theaterId') theaterId?: string): Promise<Showtime[]> {
+    if (theaterId) {
+      console.log("📌 Filtering by theaterId:", theaterId);
+      return this.showtimesService.findAllForTheater(parseInt(theaterId, 10));
+    }
+  
+    console.log("📦 Returning all showtimes (no filter)");
     return this.showtimesService.findAll();
   }
+  
 
   @Get(':id')
   findById(@Param('id') id: number): Promise<Showtime> {
@@ -18,7 +25,6 @@ export class ShowtimesController {
 
   @Post()
   create(@Body() showtime: Partial<Showtime>): Promise<Showtime> {
-    console.log("📥 Received Request:", JSON.stringify(showtime, null, 2));
     return this.showtimesService.create(showtime);
   }
 
@@ -31,4 +37,9 @@ export class ShowtimesController {
   delete(@Param('id') id: number) {
     return this.showtimesService.delete(id);
   }
+
+  
+  
+
+
 }

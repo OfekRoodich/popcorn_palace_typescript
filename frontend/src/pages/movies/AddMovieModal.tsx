@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../styles/AddMovieModal.css";
+import "../../styles/movies/AddMovieModal.css"; 
 
 interface AddMovieModalProps {
   show: boolean;
@@ -22,7 +22,7 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
   useEffect(() => {
     if (!show) {
       setMovieData({ title: "", genre: "", duration: "", rating: "", releaseYear: "" });
-      setErrorMessage(""); // Reset error when closing
+      setErrorMessage(""); 
     }
   }, [show]);
 

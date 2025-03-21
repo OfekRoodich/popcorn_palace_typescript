@@ -11,26 +11,44 @@ export class ShowtimesService {
   ) {}
 
   async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find({ relations: ['movie'] });
-  }
-
-  async findById(id: number): Promise<Showtime> {
-    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie'] });
-  }
-
-  async create(showtime: Partial<Showtime>): Promise<Showtime> {
-    console.log(`🚀 ${JSON.stringify(showtime, null, 2)}`);
-    
-    const savedShowtime = await this.showtimeRepository.save(showtime);
-  
-    // ✅ Fetch the full showtime with the related movie
-    return this.showtimeRepository.findOne({
-      where: { id: savedShowtime.id },
-      relations: ['movie'],
+    return this.showtimeRepository.find({
+      relations: ['movie', 'theater'], 
     });
   }
   
 
+  async findById(id: number): Promise<Showtime> {
+    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
+  }
+
+  async create(data: Partial<Showtime>): Promise<Showtime> {
+    const showtime = this.showtimeRepository.create({
+      movie: { id: data.movieId },
+      theater: { id: (data as any).theaterId },
+      startTime: data.startTime,
+      price: data.price,
+    });
+  
+    const savedShowtime = await this.showtimeRepository.save(showtime);
+  
+    return this.showtimeRepository.findOne({
+      where: { id: savedShowtime.id },
+      relations: ['movie', 'theater'],
+    });
+  }
+  
+  async findAllForTheater(theaterId: number): Promise<Showtime[]> {
+    console.log("🔍 Filtering showtimes by theater ID:", theaterId);
+  
+    return this.showtimeRepository
+      .createQueryBuilder("showtime")
+      .leftJoinAndSelect("showtime.movie", "movie")
+      .leftJoinAndSelect("showtime.theater", "theater")
+      .where("theater.id = :theaterId", { theaterId })
+      .getMany();
+  }
+  
+  
   async update(id: number, showtime: Partial<Showtime>): Promise<any> {
     return this.showtimeRepository.update(id, showtime);
   }
@@ -38,4 +56,5 @@ export class ShowtimesService {
   async delete(id: number): Promise<any> {
     return this.showtimeRepository.delete(id);
   }
+
 }

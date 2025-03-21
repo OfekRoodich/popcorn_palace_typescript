@@ -1,33 +1,49 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../styles/AddShowtimeModal.css";
+import "../../styles/showtimes/EditShowtimeModal.css";
 import axios from "axios";
 
-interface AddShowtimeModalProps {
+interface EditShowtimeModalProps {
   show: boolean;
   handleClose: () => void;
-  handleSave: (showtime: { movieId: number; theater: string; startTime: string; endTime: string; price: number }) => void;
+  handleUpdate: (updatedShowtime: { id: number; movieId: number;theaterId: number; startTime: string; price: number }) => void;
+  showtime: { id: number; movie: { id: number; title: string }; theater: { id: number; name: string }; startTime: string;  price: number } | null;
 }
 
-const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave }) => {
+const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose, handleUpdate, showtime }) => {
   const [movies, setMovies] = useState<{ id: number; title: string }[]>([]);
+  const [theaters, setTheaters] = useState<{ id: number; name: string }[]>([]);
   const [showtimeData, setShowtimeData] = useState({
     movieId: "",
-    theater: "",
+    theaterId: "",
     startTime: "",
-    endTime: "",
     price: "",
   });
 
-  // Load movies from API when modal opens
   useEffect(() => {
     if (show) {
       axios
         .get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
         .then((response) => setMovies(response.data))
         .catch((error) => console.error("Error fetching movies:", error));
+
+      axios.get(`${process.env.REACT_APP_API_BASE_URL}/theaters`)
+      .then((response) => {setTheaters(response.data);
+      }).catch((error) => console.error("Error fetching theaters:", error));
     }
   }, [show]);
+
+  // Fill the existing showtime details when modal opens
+  useEffect(() => {
+    if (showtime) {
+      setShowtimeData({
+        movieId: showtime.movie.id.toString(),
+        theaterId: showtime.theater.id.toString(),
+        startTime: showtime.startTime,
+        price: showtime.price.toString(),
+      });
+    }
+  }, [showtime, show]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -38,15 +54,15 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
 
   const handleSubmit = () => {
     if (isFormInvalid) {
-      alert("❌ All fields must be filled before saving.");
+      alert("❌ All fields must be filled before updating.");
       return;
     }
 
-    handleSave({
+    handleUpdate({
+      id: showtime?.id || 0,
       movieId: parseInt(showtimeData.movieId, 10) || 0,
-      theater: showtimeData.theater,
+      theaterId: parseInt(showtimeData.theaterId, 10) || 0,
       startTime: showtimeData.startTime,
-      endTime: showtimeData.endTime,
       price: parseFloat(showtimeData.price),
     });
 
@@ -58,14 +74,13 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Add a New Showtime</h5>
+            <h5 className="modal-title">Edit Showtime</h5>
           </div>
           <div className="modal-body">
             <form>
               <div className="form-group">
                 <label>Movie</label>
                 <select className="form-control" name="movieId" value={showtimeData.movieId} onChange={handleChange}>
-                  <option value="">Select a movie</option>
                   {movies.map((movie) => (
                     <option key={movie.id} value={movie.id}>
                       {movie.title}
@@ -73,17 +88,21 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+                {/* Theater Selection */}
+                <div className="form-group">
                 <label>Theater</label>
-                <input type="text" className="form-control" name="theater" value={showtimeData.theater} onChange={handleChange} />
+                <select className="form-control" name="theaterId" value={showtimeData.theaterId} onChange={handleChange}>
+                  <option value="">Select a theater</option>
+                  {theaters.map((theater) => (
+                    <option key={theater.id} value={theater.id}>
+                      {theater.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Start Time</label>
                 <input type="datetime-local" className="form-control" name="startTime" value={showtimeData.startTime} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>End Time</label>
-                <input type="datetime-local" className="form-control" name="endTime" value={showtimeData.endTime} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label>Price</label>
@@ -93,7 +112,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
           </div>
           <div className="modal-footer">
             <button className="cancel-btn" onClick={handleClose}>Cancel ❌</button>
-            <button className="save-btn" onClick={handleSubmit} disabled={isFormInvalid}>Save ✅</button>
+            <button className="save-btn" onClick={handleSubmit} disabled={isFormInvalid}>Update ✅</button>
           </div>
         </div>
       </div>
@@ -101,4 +120,4 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
   );
 };
 
-export default AddShowtimeModal;
+export default EditShowtimeModal;
