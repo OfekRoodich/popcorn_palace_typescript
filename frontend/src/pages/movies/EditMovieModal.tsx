@@ -36,8 +36,8 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setMovieData((prev) => ({ ...prev, [name]: value }));
+    setErrorMessage(""); // Reset error when input changes
   };
-  setErrorMessage(""); // Reset error when input changes
 
   const isFormInvalid = Object.values(movieData).some((value) => value === "");
 
