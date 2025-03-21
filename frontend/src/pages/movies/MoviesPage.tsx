@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/MoviesPage.css";
+import "../../styles/movies/MoviesPage.css";
 import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import AddMovieModal from "./AddMovieModal";
-import EditMovieModal from "./EditMovieModal"; // Import the Edit Modal
+import EditMovieModal from "./EditMovieModal"; 
 
 const MoviesPage: React.FC = () => {
   const [movies, setMovies] = useState<
@@ -39,8 +39,8 @@ const MoviesPage: React.FC = () => {
   };
 
   const handleEdit = (movie: any) => {
-    setSelectedMovie(movie); // Store the movie being edited
-    setShowEditModal(true); // Show the edit modal
+    setSelectedMovie(movie);
+    setShowEditModal(true);
   };
 
   const handleUpdateMovie = (updatedMovie: any) => {

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../styles/AddMovieModal.css"; 
+import "../../styles/movies/EditMovieModal.css";
 
-interface AddMovieModalProps {
+interface EditMovieModalProps {
   show: boolean;
   handleClose: () => void;
-  handleSave: (movie: { title: string; genre: string; duration: number; rating: number; releaseYear: number }) => void;
+  handleUpdate: (updatedMovie: { id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number }) => void;
+  movie: { id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number } | null;
 }
 
-const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handleSave }) => {
+const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, handleUpdate, movie }) => {
   const [movieData, setMovieData] = useState({
     title: "",
     genre: "",
@@ -16,22 +17,28 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
     rating: "",
     releaseYear: "",
   });
-
   const [errorMessage, setErrorMessage] = useState("");
+  
 
+  // Fill existing movie details when the modal opens
   useEffect(() => {
-    if (!show) {
-      setMovieData({ title: "", genre: "", duration: "", rating: "", releaseYear: "" });
-      setErrorMessage(""); // Reset error when closing
+    if (movie) {
+      setMovieData({
+        title: movie.title,
+        genre: movie.genre,
+        duration: movie.duration.toString(),
+        rating: movie.rating.toString(),
+        releaseYear: movie.releaseYear.toString(),
+      });
     }
-  }, [show]);
+  }, [movie, show]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setMovieData((prev) => ({ ...prev, [name]: value }));
   };
+  setErrorMessage(""); // Reset error when input changes
 
-  // Check if any field is empty
   const isFormInvalid = Object.values(movieData).some((value) => value === "");
 
   const handleSubmit = () => {
@@ -40,7 +47,8 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
       return;
     }
 
-    handleSave({
+    handleUpdate({
+      id: movie?.id || 0,
       title: movieData.title,
       genre: movieData.genre,
       duration: parseInt(movieData.duration, 10),
@@ -48,9 +56,7 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
       releaseYear: parseInt(movieData.releaseYear, 10),
     });
 
-    setMovieData({ title: "", genre: "", duration: "", rating: "", releaseYear: "" });
-    setErrorMessage(""); // Clear error on successful save
-    handleClose();
+    handleClose(); // Close modal after updating
   };
 
   return (
@@ -58,7 +64,7 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Add a New Movie</h5>
+            <h5 className="modal-title">Edit Movie</h5>
           </div>
           <div className="modal-body">
             <form>
@@ -83,15 +89,10 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
                 <input type="number" className="form-control" name="releaseYear" value={movieData.releaseYear} onChange={handleChange} />
               </div>
             </form>
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
           </div>
           <div className="modal-footer">
-            <button className="cancel-btn" onClick={handleClose}>
-              Cancel ❌
-            </button>
-            <button className="save-btn" onClick={handleSubmit} >
-              Save ✅
-            </button>
+            <button className="cancel-btn" onClick={handleClose}>Cancel ❌</button>
+            <button className="save-btn" onClick={handleSubmit} disabled={isFormInvalid}>Update ✅</button>
           </div>
         </div>
       </div>
@@ -99,4 +100,4 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, handleClose, handle
   );
 };
 
-export default AddMovieModal;
+export default EditMovieModal;

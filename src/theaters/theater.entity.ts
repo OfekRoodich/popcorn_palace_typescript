@@ -15,6 +15,6 @@ export class Theater {
   @Column()
   numberOfColumns: number;
 
-  @OneToMany(() => Showtime, (showtime) => showtime.theater, { cascade: true })
-  showtimes: Showtime[];
+  // @OneToMany(() => Showtime, (showtime) => showtime.theater, { cascade: true })
+  // showtimes: Showtime[];
 }

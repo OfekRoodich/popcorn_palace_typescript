@@ -11,17 +11,21 @@ export class Showtime {
   @Column('decimal')
   price: number;
 
-  @Column({ nullable: false })  // ✅ Explicitly define `movieId` as a column
-  movieId: number;
+  @Column()
+  movieId: number; 
 
   @ManyToOne(() => Movie, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'movieId' })  // ✅ Ensure `movieId` is properly mapped
+  @JoinColumn({ name: 'movieId' })
   movie: Movie;
+
+  @Column()
+  theaterId: number; 
+
+  @ManyToOne(() => Theater, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'theaterId' })
+  theater: Theater;
 
   @Column('timestamp')
   startTime: Date;
-
-  @ManyToOne(() => Theater, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'theaterId' })  // ✅ Ensure `theaterId` is properly mapped
-  theater: Theater;
 }
+

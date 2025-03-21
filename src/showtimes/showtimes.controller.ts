@@ -18,7 +18,6 @@ export class ShowtimesController {
 
   @Post()
   create(@Body() showtime: Partial<Showtime>): Promise<Showtime> {
-    console.log("📥 Received Request:", JSON.stringify(showtime, null, 2));
     return this.showtimesService.create(showtime);
   }
 

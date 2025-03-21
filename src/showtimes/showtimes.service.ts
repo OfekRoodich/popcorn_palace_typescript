@@ -11,24 +11,30 @@ export class ShowtimesService {
   ) {}
 
   async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find({ relations: ['movie', 'theater'] });
+    return this.showtimeRepository.find({
+      relations: ['movie', 'theater'], // ✅ Make sure 'theater' is included
+    });
   }
+  
 
   async findById(id: number): Promise<Showtime> {
     return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
   }
 
   async create(showtime: Partial<Showtime>): Promise<Showtime> {
-    console.log(`🚀 ${JSON.stringify(showtime, null, 2)}`);
-    
+  
+    // Save showtime and return only IDs initially
     const savedShowtime = await this.showtimeRepository.save(showtime);
   
-    // ✅ Fetch the full showtime with the related movie
-    return this.showtimeRepository.findOne({
+    // Fetch the full showtime with relations (movie + theater)
+    const fullShowtime = await this.showtimeRepository.findOne({
       where: { id: savedShowtime.id },
-      relations: ['movie'],
+      relations: ['movie', 'theater'], // ✅ Now includes 'theater'
     });
+  
+    return fullShowtime;
   }
+  
   
 
   async update(id: number, showtime: Partial<Showtime>): Promise<any> {
@@ -38,4 +44,5 @@ export class ShowtimesService {
   async delete(id: number): Promise<any> {
     return this.showtimeRepository.delete(id);
   }
+
 }

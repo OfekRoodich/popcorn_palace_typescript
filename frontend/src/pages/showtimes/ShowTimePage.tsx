@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../styles/ShowTimePage.css"; 
+import "../../styles/showtimes/ShowTimePage.css"; 
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -25,7 +25,9 @@ const [selectedShowtime, setSelectedShowtime] = useState<any>(null)
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_BASE_URL}/showtimes`)
-      .then(response => setShowtimes(response.data))
+      .then(response => {
+        setShowtimes(response.data);
+      })
       .catch(error => console.error('Error fetching showtimes:', error));
   }, []);
 
@@ -47,14 +49,18 @@ const [selectedShowtime, setSelectedShowtime] = useState<any>(null)
     }
   };
   const handleUpdateShowtime = (updatedShowtime: any) => {
-    axios
-      .put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${updatedShowtime.id}`, updatedShowtime)
+    axios.put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${updatedShowtime.id}`, updatedShowtime)
       .then(() => {
-        setShowtimes(showtimes.map((st) => (st.id === updatedShowtime.id ? updatedShowtime : st)));
-        setShowEditModal(false);
+        axios.get(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${updatedShowtime.id}`)
+          .then(response => {
+            setShowtimes(showtimes.map(st => (st.id === updatedShowtime.id ? response.data : st)));
+            setShowEditModal(false);
+          })
+          .catch(error => console.error("Error fetching updated showtime:", error));
       })
-      .catch((error) => console.error("Error updating showtime:", error));
+      .catch(error => console.error("Error updating showtime:", error));
   };
+  
   const handleAddShowtime = (newShowtime: any) => {
 
     axios
@@ -91,7 +97,7 @@ const [selectedShowtime, setSelectedShowtime] = useState<any>(null)
           <TableBody>
             {showtimes.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).map((showtime) => (
               <TableRow key={showtime.id}>
-                <TableCell>{showtime.movie.title}</TableCell>
+                <TableCell>{showtime.movie?.title || "Unknown Movie"}</TableCell>
                 <TableCell>{showtime.theater?.name || 'Unknown Theater'}</TableCell>
                 <TableCell>{new Date(showtime.startTime).toLocaleString()}</TableCell>
                 <TableCell>
