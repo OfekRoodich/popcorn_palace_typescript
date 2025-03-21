@@ -21,18 +21,20 @@ export class ShowtimesService {
     return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
   }
 
-  async create(showtime: Partial<Showtime>): Promise<Showtime> {
-  
-    // Save showtime and return only IDs initially
-    const savedShowtime = await this.showtimeRepository.save(showtime);
-  
-    // Fetch the full showtime with relations (movie + theater)
-    const fullShowtime = await this.showtimeRepository.findOne({
-      where: { id: savedShowtime.id },
-      relations: ['movie', 'theater'], // ✅ Now includes 'theater'
+  async create(data: Partial<Showtime>): Promise<Showtime> {
+    const showtime = this.showtimeRepository.create({
+      movie: { id: data.movieId },
+      theater: { id: (data as any).theaterId },
+      startTime: data.startTime,
+      price: data.price,
     });
   
-    return fullShowtime;
+    const savedShowtime = await this.showtimeRepository.save(showtime);
+  
+    return this.showtimeRepository.findOne({
+      where: { id: savedShowtime.id },
+      relations: ['movie', 'theater'],
+    });
   }
   
   async findAllForTheater(theaterId: number): Promise<Showtime[]> {
