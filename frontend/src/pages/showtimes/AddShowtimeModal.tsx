@@ -57,6 +57,9 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
         .then((response) => setTheaters(response.data))
         .catch((error) => console.error("Error fetching theaters:", error));
     }
+    else
+      setShowtimeData({ movieId: "", theaterId: "", startTime: "", price: "" });
+
   }, [show]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -110,7 +113,9 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       startTime: showtimeData.startTime,
       price: parseFloat(showtimeData.price),
     });
-  
+
+    setShowtimeData({ movieId: "", theaterId: "", startTime: "", price: "" });
+
     handleClose();
   };
   
