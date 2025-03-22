@@ -44,8 +44,5 @@ updateSeats(
   return this.showtimesService.updateSeatMatrix(id, seatMatrix);
 }
 
-  
-  
-
 
 }

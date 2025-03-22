@@ -12,7 +12,10 @@ const MoviesPage: React.FC = () => {
   >([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState<any>(null); // Track movie being edited
+  const [selectedMovie, setSelectedMovie] = useState<any>(null); 
+  const [editError, setEditError] = useState(""); 
+  const [addError, setAddError] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,25 +46,32 @@ const MoviesPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdateMovie = (updatedMovie: any) => {
-    axios
-      .put(`${process.env.REACT_APP_API_BASE_URL}/movies/${updatedMovie.id}`, updatedMovie)
-      .then(() => {
-        setMovies(movies.map((movie) => (movie.id === updatedMovie.id ? updatedMovie : movie)));
-        setShowEditModal(false);
-      })
-      .catch((error) => console.error("Error updating movie:", error));
-  };
 
-  const handleAddMovie = (newMovie: any) => {
-    axios
-      .post(`${process.env.REACT_APP_API_BASE_URL}/movies`, newMovie)
-      .then((response) => {
-        setMovies([...movies, response.data]);
-        setShowAddModal(false);
-      })
-      .catch((error) => console.error("Error adding movie:", error));
+  const handleUpdateMovie = async (updatedMovie: any) => {
+    try {
+      await axios.put(`${process.env.REACT_APP_API_BASE_URL}/movies/${updatedMovie.id}`, updatedMovie);
+      setMovies(movies.map((movie) => (movie.id === updatedMovie.id ? updatedMovie : movie)));
+      setShowEditModal(false);
+      setEditError(""); 
+    } catch (error: any) {
+      const message = error.response?.data?.message || "❌ Failed to update movie.";
+      setEditError(message);
+    }
   };
+  
+
+  const handleAddMovie = async (newMovie: any) => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/movies`, newMovie);
+      setMovies([...movies, response.data]);
+      setShowAddModal(false);
+      setAddError("");
+    } catch (error: any) {
+      const message = error.response?.data?.message || "❌ Failed to add movie.";
+      setAddError(message);
+    }
+  };
+  
 
   return (
     <div className="movie-container">
@@ -97,14 +107,26 @@ const MoviesPage: React.FC = () => {
     ))}
   </div>
 
-      <AddMovieModal show={showAddModal} handleClose={() => setShowAddModal(false)} handleSave={handleAddMovie} />
-
+  <AddMovieModal
+  show={showAddModal}
+  handleClose={() => {
+    setShowAddModal(false);
+    setAddError("");
+  }}
+  handleSave={handleAddMovie}
+  errorMessage={addError}
+/>
       <EditMovieModal 
-        show={showEditModal} 
-        handleClose={() => setShowEditModal(false)} 
-        handleUpdate={handleUpdateMovie} 
-        movie={selectedMovie} 
-      />
+  show={showEditModal} 
+  handleClose={() => {
+    setShowEditModal(false);
+    setEditError("");
+  }} 
+  handleUpdate={handleUpdateMovie} 
+  movie={selectedMovie}
+  errorMessage={editError}
+/>
+
     </div>
   );
 };
