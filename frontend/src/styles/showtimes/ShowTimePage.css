@@ -43,16 +43,20 @@
   .showtime-card p {
     margin: 5px 0;
   }
-  .buy-tickets-btn {
-    text-align: right; 
-    padding-right: 10px;
-}
 
-.buy-tickets-text {
-    color: rgb(0, 21, 255);
+  .buy-tickets-btn:disabled .buy-tickets-text {
+    color: gray;       
+    font-style: italic;
+    cursor: default;
+    
+  }
+  
+  .buy-tickets-btn:not(:disabled) .buy-tickets-text {
+    color: rgb(0, 21, 255);  
     text-decoration: underline;
-}
-
+    cursor: pointer;
+  }
+  
 .edit-btn{
   align-items: center;
 }

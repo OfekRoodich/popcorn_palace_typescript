@@ -95,6 +95,7 @@ const ShowtimesPage: React.FC = () => {
               <TableCell><strong>End Time</strong></TableCell>
               <TableCell><strong>Price</strong></TableCell>
               <TableCell><strong>Book Tickets</strong></TableCell>
+              <TableCell><strong>Status</strong></TableCell>
               <TableCell align="right"><strong>Edit</strong></TableCell>
               <TableCell align="right"><strong>Delete</strong></TableCell>
             </TableRow>
@@ -110,9 +111,25 @@ const ShowtimesPage: React.FC = () => {
                 </TableCell>
                 <TableCell>{showtime.price}₪</TableCell>
                 <TableCell className="buy-tickets-button">
-                 <button className="buy-tickets-btn">
-                 <p className="buy-tickets-text" onClick={() => handleOpenBooking(showtime)}>Buy Tickets</p>
+                 <button className="buy-tickets-btn" disabled={showtime.theater.numberOfColumns * showtime.theater.numberOfRows==showtime.bookedCount}>
+                 <p className="buy-tickets-text" onClick={() => handleOpenBooking(showtime)} >Buy Tickets</p>
                   </button> 
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const totalSeats = showtime.theater.numberOfColumns * showtime.theater.numberOfRows;
+                    const seatsByPrecents = (showtime.bookedCount / totalSeats)*100;
+
+                    if (seatsByPrecents === 100) {
+                      return <span className="text-danger"><strong>Sold Out</strong></span>;
+                    } else if (seatsByPrecents >= 90) {
+                      return <span className="text-danger">Last Seats</span>;
+                    } else if (seatsByPrecents >= 33) {
+                      return <span className="text-warning">Limited</span>;
+                    } else {
+                      return <span className="text-success" >Available</span>;
+                    }
+                  })()}
                 </TableCell>
                 <TableCell align="right">
                 <Tooltip title={showtime.bookedCount > 0 ? "Cannot edit a showtime with booked tickets" : "Edit"}>
