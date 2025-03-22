@@ -15,7 +15,7 @@ import EditShowtimeModal from "./EditShowtimeModal";
 
 const ShowtimesPage: React.FC = () => {
   const [showtimes, setShowtimes] = useState<
-    { id: number; movie: { id: number; title: string; duration: number }; theater: { id: number; name: string; numberOfRows: number; numberOfColumns: number }; startTime: string; price: number }[]
+    { id: number; movie: { id: number; title: string; duration: number }; theater: { id: number; name: string; numberOfRows: number; numberOfColumns: number }; startTime: string; price: number, bookedCount: number;  }[]
   >([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -115,9 +115,13 @@ const ShowtimesPage: React.FC = () => {
                   </button> 
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <button className="edit-btn" onClick={() => handleEdit(showtime)}>✏️</button>
-                  </Tooltip>
+                <Tooltip title={showtime.bookedCount > 0 ? "Cannot edit a showtime with booked tickets" : "Edit"}>
+                  <span>
+                    <button 
+                      className="edit-showtime-btn" onClick={() => handleEdit(showtime)} disabled={showtime.bookedCount > 0} >✏️
+                    </button>
+                  </span>
+                </Tooltip>
                 </TableCell>
                 <TableCell align="right">
                   <Tooltip title="Delete">

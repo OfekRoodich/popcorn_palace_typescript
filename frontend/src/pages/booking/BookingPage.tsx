@@ -54,6 +54,8 @@ const BookingPage: React.FC = () => {
     });
 
     alert("Tickets booked successfully!");
+    handleBack();
+    
   };
   
   const handleBack = () => {
