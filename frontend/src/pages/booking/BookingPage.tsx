@@ -4,6 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/booking/BookingPage.css";
+import "../../styles/general/GeneralPage.css";
+
 
 const BookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

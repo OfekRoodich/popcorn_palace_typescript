@@ -25,4 +25,9 @@ export class TheatersService {
     async delete(id: number): Promise<any> {
       return this.theaterRepository.delete(id);
     }
+
+    async findOne(id: number): Promise<Theater | null> {
+      return this.theaterRepository.findOne({ where: { id } });
+    }
+    
 }

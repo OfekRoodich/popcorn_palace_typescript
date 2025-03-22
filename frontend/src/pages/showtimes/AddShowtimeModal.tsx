@@ -7,9 +7,11 @@ interface AddShowtimeModalProps {
   show: boolean;
   handleClose: () => void;
   handleSave: (showtime: { movieId: number; theaterId: number; startTime: string; price: number }) => void;
+  errorMessage?: string;
+
 }
 
-const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave }) => {
+const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave,errorMessage }) => {
   const [movies, setMovies] = useState<{ id: number; title: string }[]>([]);
   const [theaters, setTheaters] = useState<{ id: number; name: string }[]>([]);
   const [existingShowtimes, setExistingShowtimes] = useState<
@@ -114,9 +116,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       price: showtimeData.price,
     });
 
-    setShowtimeData({ movieId: 0, theaterId: 0, startTime: "", price: 0});
-
-    handleClose();
   };
   
 
@@ -127,6 +126,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
           <div className="modal-header">
             <h5 className="modal-title">Add a New Showtime</h5>
           </div>
+          {errorMessage && (<div className="alert alert-danger mt-2" role="alert">{errorMessage}</div>)}
           <div className="modal-body">
             <form>
               {/* Movie Selection */}

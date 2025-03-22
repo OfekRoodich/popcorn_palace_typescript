@@ -7,9 +7,11 @@ interface EditMovieModalProps {
   handleClose: () => void;
   handleUpdate: (updatedMovie: { id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number }) => void;
   movie: { id: number; title: string; genre: string; duration: number; rating: number; releaseYear: number } | null;
+  errorMessage?: string;
+
 }
 
-const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, handleUpdate, movie }) => {
+const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, handleUpdate, movie, errorMessage }) => {
   const [movieData, setMovieData] = useState({
     title: "",
     genre: "",
@@ -17,10 +19,8 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
     rating: "",
     releaseYear: "",
   });
-  const [errorMessage, setErrorMessage] = useState("");
   
 
-  // Fill existing movie details when the modal opens
   useEffect(() => {
     if (movie) {
       setMovieData({
@@ -36,16 +36,11 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setMovieData((prev) => ({ ...prev, [name]: value }));
-    setErrorMessage(""); // Reset error when input changes
   };
 
   const isFormInvalid = Object.values(movieData).some((value) => value === "");
 
   const handleSubmit = () => {
-    if (isFormInvalid) {
-      setErrorMessage("❌ All fields must be filled before saving");
-      return;
-    }
 
     handleUpdate({
       id: movie?.id || 0,
@@ -56,16 +51,18 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ show, handleClose, hand
       releaseYear: parseInt(movieData.releaseYear, 10),
     });
 
-    handleClose(); // Close modal after updating
   };
 
   return (
+    
     <div className={`modal fade ${show ? "show d-block" : ""}`} tabIndex={-1} role="dialog">
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
+            
             <h5 className="modal-title">Edit Movie</h5>
           </div>
+          {errorMessage && (<div className="alert alert-danger mt-3" role="alert">{errorMessage}</div>)}
           <div className="modal-body">
             <form>
               <div className="form-group">

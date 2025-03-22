@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../../styles/showtimes/ShowTimePage.css"; 
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -12,6 +11,9 @@ import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip"; 
 import AddShowtimeModal from "./AddShowtimeModal"; 
 import EditShowtimeModal from "./EditShowtimeModal"; 
+import "../../styles/showtimes/ShowTimePage.css"; 
+import "../../styles/general/GeneralPage.css";
+
 
 const ShowtimesPage: React.FC = () => {
   const [showtimes, setShowtimes] = useState<
@@ -20,6 +22,9 @@ const ShowtimesPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedShowtime, setSelectedShowtime] = useState<any>(null);
+  const [addError, setAddError] = useState("");
+  const [editError, setEditError] = useState("");
+
 
   const navigate = useNavigate();
 
@@ -61,7 +66,10 @@ const ShowtimesPage: React.FC = () => {
           })
           .catch(error => console.error("Error fetching updated showtime:", error));
       })
-      .catch(error => console.error("Error updating showtime:", error));
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to edit showtime.";
+        setEditError(message);
+      });
   };
 
   const handleAddShowtime = (newShowtime: any) => {
@@ -69,9 +77,14 @@ const ShowtimesPage: React.FC = () => {
       .then((response) => {
         setShowtimes([...showtimes, response.data]);
         setShowModal(false);
+        setAddError("");
       })
-      .catch((error) => console.error("Error adding showtime:", error));
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to add showtime.";
+        setAddError(message);
+      });
   };
+  
 
   const handleOpenBooking = (showtime: any) => {
     navigate(`/book/${showtime.id}`);
@@ -86,7 +99,7 @@ const ShowtimesPage: React.FC = () => {
       </div>
       <h1 className="showtimes-title">Showtimes 🕒</h1>
       <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell><strong>Title</strong></TableCell>
@@ -95,6 +108,7 @@ const ShowtimesPage: React.FC = () => {
               <TableCell><strong>End Time</strong></TableCell>
               <TableCell><strong>Price</strong></TableCell>
               <TableCell><strong>Book Tickets</strong></TableCell>
+              <TableCell><strong>Status</strong></TableCell>
               <TableCell align="right"><strong>Edit</strong></TableCell>
               <TableCell align="right"><strong>Delete</strong></TableCell>
             </TableRow>
@@ -110,9 +124,25 @@ const ShowtimesPage: React.FC = () => {
                 </TableCell>
                 <TableCell>{showtime.price}₪</TableCell>
                 <TableCell className="buy-tickets-button">
-                 <button className="buy-tickets-btn">
-                 <p className="buy-tickets-text" onClick={() => handleOpenBooking(showtime)}>Buy Tickets</p>
+                 <button className="buy-tickets-btn" disabled={showtime.theater.numberOfColumns * showtime.theater.numberOfRows==showtime.bookedCount}>
+                 <p className="buy-tickets-text" onClick={() => handleOpenBooking(showtime)} >Buy Tickets</p>
                   </button> 
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const totalSeats = showtime.theater.numberOfColumns * showtime.theater.numberOfRows;
+                    const seatsByPrecents = (showtime.bookedCount / totalSeats)*100;
+
+                    if (seatsByPrecents === 100) {
+                      return <span className="text-danger"><strong>Sold Out</strong></span>;
+                    } else if (seatsByPrecents >= 90) {
+                      return <span className="text-danger">Last Seats</span>;
+                    } else if (seatsByPrecents >= 33) {
+                      return <span className="text-warning">Limited</span>;
+                    } else {
+                      return <span className="text-success" >Available</span>;
+                    }
+                  })()}
                 </TableCell>
                 <TableCell align="right">
                 <Tooltip title={showtime.bookedCount > 0 ? "Cannot edit a showtime with booked tickets" : "Edit"}>
@@ -134,8 +164,16 @@ const ShowtimesPage: React.FC = () => {
         </Table>
       </TableContainer>
 
-      <AddShowtimeModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddShowtime} />
-      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime} />
+      <AddShowtimeModal
+          show={showModal}
+          handleClose={() => {
+            setShowModal(false);
+            setAddError("");
+          }}
+          handleSave={handleAddShowtime}
+          errorMessage={addError}
+          />      
+      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime}  errorMessage={editError}/>
     </div>
   );
 };
