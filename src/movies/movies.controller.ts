@@ -41,7 +41,9 @@ export class MoviesController {
       throw new BadRequestException("⚠️ Movie rating must be a number");
     if (movie.releaseYear && typeof movie.releaseYear !== "number")
       throw new BadRequestException("⚠️ Movie release year must be a number");
-
+    
+    if (movie.duration <= 0 )
+      throw new BadRequestException("⚠️ Movie duration must be a positive number");
     if (movie.rating> 10.0 || movie.rating<0)
       throw new BadRequestException("⚠️Movie rating must be between 0 to 10");
 
@@ -76,8 +78,8 @@ export class MoviesController {
     if (typeof movie.releaseYear !== "number")
       throw new BadRequestException("⚠️ Movie release year must be a number");
   
-    if (movie.duration <= 0 || movie.duration > 600)
-      throw new BadRequestException("⚠️ Movie duration must be between 1 and 600 minutes");
+    if (movie.duration <= 0 )
+      throw new BadRequestException("⚠️ Movie duration must be a positive number");
   
     if (movie.rating > 10.0 || movie.rating < 0)
       throw new BadRequestException("⚠️ Movie rating must be between 0 to 10");
