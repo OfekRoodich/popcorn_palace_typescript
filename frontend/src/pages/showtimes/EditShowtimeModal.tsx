@@ -20,6 +20,8 @@ interface EditShowtimeModalProps {
     startTime: string;
     price: number;
   } | null;
+  errorMessage?: string;
+
 }
 
 const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
@@ -27,6 +29,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
   handleClose,
   handleUpdate,
   showtime,
+  errorMessage
 }) => {
   const [movies, setMovies] = useState<{ id: number; title: string }[]>([]);
   const [theaters, setTheaters] = useState<{ id: number; name: string }[]>([]);
@@ -147,7 +150,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
       price: showtimeData.price,
     });
 
-    handleClose();
   };
 
   return (
@@ -157,6 +159,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
           <div className="modal-header">
             <h5 className="modal-title">Edit Showtime</h5>
           </div>
+          {errorMessage && (<div className="alert alert-danger mt-2" role="alert">{errorMessage}</div>)}
           <div className="modal-body">
             {error && (
               <div className="alert alert-danger alert-dismissible fade show" role="alert">

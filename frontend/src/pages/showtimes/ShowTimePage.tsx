@@ -22,6 +22,9 @@ const ShowtimesPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedShowtime, setSelectedShowtime] = useState<any>(null);
+  const [addError, setAddError] = useState("");
+  const [editError, setEditError] = useState("");
+
 
   const navigate = useNavigate();
 
@@ -63,7 +66,10 @@ const ShowtimesPage: React.FC = () => {
           })
           .catch(error => console.error("Error fetching updated showtime:", error));
       })
-      .catch(error => console.error("Error updating showtime:", error));
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to edit showtime.";
+        setEditError(message);
+      });
   };
 
   const handleAddShowtime = (newShowtime: any) => {
@@ -71,9 +77,14 @@ const ShowtimesPage: React.FC = () => {
       .then((response) => {
         setShowtimes([...showtimes, response.data]);
         setShowModal(false);
+        setAddError("");
       })
-      .catch((error) => console.error("Error adding showtime:", error));
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to add showtime.";
+        setAddError(message);
+      });
   };
+  
 
   const handleOpenBooking = (showtime: any) => {
     navigate(`/book/${showtime.id}`);
@@ -153,8 +164,16 @@ const ShowtimesPage: React.FC = () => {
         </Table>
       </TableContainer>
 
-      <AddShowtimeModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddShowtime} />
-      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime} />
+      <AddShowtimeModal
+          show={showModal}
+          handleClose={() => {
+            setShowModal(false);
+            setAddError("");
+          }}
+          handleSave={handleAddShowtime}
+          errorMessage={addError}
+          />      
+      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime}  errorMessage={editError}/>
     </div>
   );
 };

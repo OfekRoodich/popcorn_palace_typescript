@@ -35,11 +35,11 @@ export class MoviesController {
     if (!movie.releaseYear)
       throw new BadRequestException("⚠️ Movie release year can't be empty");
 
-    if (movie.duration && typeof movie.duration !== "number")
+    if (typeof movie.duration !== "number")
       throw new BadRequestException("⚠️ Movie duration must be a number");
-    if (movie.rating && typeof movie.rating !== "number")
+    if (typeof movie.rating !== "number")
       throw new BadRequestException("⚠️ Movie rating must be a number");
-    if (movie.releaseYear && typeof movie.releaseYear !== "number")
+    if (typeof movie.releaseYear !== "number")
       throw new BadRequestException("⚠️ Movie release year must be a number");
     
     if (movie.duration <= 0 )
@@ -52,6 +52,7 @@ export class MoviesController {
 
     if (movie.releaseYear> new Date().getFullYear())
       throw new BadRequestException("⚠️ release year can't be in the future");
+    
     return this.moviesService.create(movie);
   }
 
@@ -111,10 +112,10 @@ export class MoviesController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Movie> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Movie> { // if  id can't be parsed to number, there will be an error (ParseIntPipe)
     const movie = await this.moviesService.findOne(id);
 
-    if (!movie) {
+    if (!movie) { // movie would be null if nothing was deleted (id wasn't found)
       throw new NotFoundException(`Movie with ID ${id} was not found`);
     }
 
