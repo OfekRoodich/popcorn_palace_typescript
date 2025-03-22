@@ -17,10 +17,10 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
 >([]);  const [movieDuration, setMovieDuration] = useState<number | null>(null);
 
   const [showtimeData, setShowtimeData] = useState({
-    movieId: "",
-    theaterId: "",
+    movieId: 0,
+    theaterId: 0,
     startTime: "",
-    price: "",
+    price: 0,
   });
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
         .catch((error) => console.error("Error fetching theaters:", error));
     }
     else
-      setShowtimeData({ movieId: "", theaterId: "", startTime: "", price: "" });
+      setShowtimeData({ movieId: 0, theaterId: 0, startTime: "", price: 0 });
 
   }, [show]);
 
@@ -108,13 +108,13 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
     }
   
     handleSave({
-      movieId: parseInt(showtimeData.movieId, 10),
-      theaterId: parseInt(showtimeData.theaterId, 10),
+      movieId: showtimeData.movieId,
+      theaterId: showtimeData.theaterId,
       startTime: showtimeData.startTime,
-      price: parseFloat(showtimeData.price),
+      price: showtimeData.price,
     });
 
-    setShowtimeData({ movieId: "", theaterId: "", startTime: "", price: "" });
+    setShowtimeData({ movieId: 0, theaterId: 0, startTime: "", price: 0});
 
     handleClose();
   };
