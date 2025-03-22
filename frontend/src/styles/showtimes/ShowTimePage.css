@@ -56,3 +56,9 @@
 .edit-btn{
   align-items: center;
 }
+
+.buy-tickets-btn{
+ border: none;
+color: white;
+background-color: white;
+height: fit-content;}
