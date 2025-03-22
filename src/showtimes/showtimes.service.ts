@@ -38,7 +38,6 @@ export class ShowtimesService {
   }
   
   async findAllForTheater(theaterId: number): Promise<Showtime[]> {
-    console.log("🔍 Filtering showtimes by theater ID:", theaterId);
   
     return this.showtimeRepository
       .createQueryBuilder("showtime")
@@ -49,9 +48,23 @@ export class ShowtimesService {
   }
   
   
-  async update(id: number, showtime: Partial<Showtime>): Promise<any> {
-    return this.showtimeRepository.update(id, showtime);
+  async update(id: number, data: Partial<Showtime>): Promise<any> {
+    const updateData: any = {
+      startTime: data.startTime,
+      price: data.price,
+    };
+  
+    if (data.movieId) {
+      updateData.movie = { id: data.movieId };
+    }
+  
+    if ((data as any).theaterId) {
+      updateData.theater = { id: (data as any).theaterId };
+    }
+  
+    return this.showtimeRepository.update(id, updateData);
   }
+  
 
   async delete(id: number): Promise<any> {
     return this.showtimeRepository.delete(id);

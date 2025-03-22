@@ -72,7 +72,7 @@ const TheatersPage: React.FC = () => {
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
 
       </div>
-      <h1 className="theaters-title">Theaters 🎭</h1>
+      <h1 className="theaters-title">Theaters 🎦</h1>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>

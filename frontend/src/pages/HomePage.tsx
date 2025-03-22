@@ -13,7 +13,7 @@ const HomePage: React.FC = () => {
             <ul className="nav-links">
             <li><Link to="/movies" className="btn btn-info">Movies 🎥</Link></li>
             <li><Link to="/showtimes" className="btn btn-success">Showtimes 🕒</Link></li>
-            <li><Link to="/theaters" className="btn btn-danger btn-lg">Theathers </Link></li>
+            <li><Link to="/theaters" className="btn btn-danger btn-lg">Theathers 🎦 </Link></li>
             </ul>
           </nav>
         </div>

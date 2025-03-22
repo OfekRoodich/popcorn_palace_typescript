@@ -9,11 +9,9 @@ export class ShowtimesController {
   @Get()
   findAll(@Query('theaterId') theaterId?: string): Promise<Showtime[]> {
     if (theaterId) {
-      console.log("📌 Filtering by theaterId:", theaterId);
       return this.showtimesService.findAllForTheater(parseInt(theaterId, 10));
     }
   
-    console.log("📦 Returning all showtimes (no filter)");
     return this.showtimesService.findAll();
   }
   
