@@ -7,16 +7,16 @@ interface EditTheaterModalProps {
   handleClose: () => void;
   handleUpdate: (theater: { id: number; name: string; numberOfRows: number; numberOfColumns: number }) => void;
   theater: { id: number; name: string; numberOfRows: number; numberOfColumns: number } | null;
+  errorMessage?: string;
 }
 
-const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, handleUpdate, theater }) => {
+const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, handleUpdate, theater, errorMessage }) => {
   const [theaterData, setTheaterData] = useState({
     id: 0,
     name: "",
     numberOfRows: 0,
     numberOfColumns: 0,
   });
-  const [errorMessage, setErrorMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,6 @@ const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, 
         numberOfRows: theater.numberOfRows,
         numberOfColumns: theater.numberOfColumns,
       });
-      setErrorMessage("");
       setShowAlert(true); // ✅ show alert on modal open
     }
   }, [show, theater]);
@@ -47,27 +46,15 @@ const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, 
       [name]: name === "name" ? value : Math.max(0, parseInt(value, 10) || 0),
     }));
 
-    setErrorMessage("");
   };
 
   const handleSubmit = () => {
-    if (!theaterData.name.trim()) {
-      setErrorMessage("❌ Theater name can't be empty");
-      return;
-    }
-    if (theaterData.numberOfRows <= 0 || theaterData.numberOfColumns <= 0) {
-      setErrorMessage("❌ Number of rows and columns must be greater than zero");
-      return;
-    }
-
     handleUpdate({
       id: theaterData.id,
       name: theaterData.name.trim(),
       numberOfRows: theaterData.numberOfRows,
       numberOfColumns: theaterData.numberOfColumns,
     });
-
-    handleClose();
   };
 
   return (
@@ -77,6 +64,7 @@ const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, 
           <div className="modal-header">
             <h5 className="modal-title">Edit Theater</h5>
           </div>
+          {errorMessage && (<div className="alert alert-danger mt-2" role="alert">{errorMessage}</div>)}
           <div className="modal-body">
             {showAlert && (
               <div className="alert alert-warning alert-dismissible fade show" role="alert">
@@ -118,8 +106,6 @@ const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, 
               onChange={handleChange}
               min="1"
             />
-
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
           </div>
 
           <div className="modal-footer">

@@ -22,7 +22,8 @@ const TheatersPage: React.FC = () => {
   const [selectedTheater, setSelectedTheater] = useState<any>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [theaterToDelete, setTheaterToDelete] = useState<number | null>(null);
-
+  const [addError, setAddError] = useState("");
+  const [editError, setEditError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,16 +62,23 @@ const TheatersPage: React.FC = () => {
         setTheaters(theaters.map((t) => (t.id === updatedTheater.id ? updatedTheater : t)));
         setShowEditModal(false);
       })
-      .catch(error => console.error("Error updating theater:", error));
-  };
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to add theater.";
+        setEditError(message);
+      });  
+    };
 
   const handleAddTheater = (newTheater: any) => {
     axios.post(`${process.env.REACT_APP_API_BASE_URL}/theaters`, newTheater)
       .then((response) => {
         setTheaters([...theaters, response.data]);
         setShowModal(false);
+        setAddError("");
       })
-      .catch(error => console.error("Error adding theater:", error));
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to edit theater.";
+        setAddError(message);
+      });
   };
 
   const handleBack = () => {
@@ -119,8 +127,8 @@ const TheatersPage: React.FC = () => {
           </Table>
         </TableContainer>
 
-        <AddTheaterModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddTheater} />
-        <EditTheaterModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateTheater} theater={selectedTheater} />
+        <AddTheaterModal show={showModal} handleClose={() => {setShowModal(false);setAddError("");}} handleSave={handleAddTheater} errorMessage={addError}/>
+        <EditTheaterModal show={showEditModal} handleClose={() =>{ setShowEditModal(false); setEditError("")}} handleUpdate={handleUpdateTheater} theater={selectedTheater} errorMessage={editError} />
 
         {/* ✅ Confirm Modal Component */}
         <ConfirmModal

@@ -6,20 +6,19 @@ interface AddTheaterModalProps {
   show: boolean;
   handleClose: () => void;
   handleSave: (theater: { name: string; numberOfRows: number; numberOfColumns: number }) => void;
+  errorMessage?: string;
 }
 
-const AddTheaterModal: React.FC<AddTheaterModalProps> = ({ show, handleClose, handleSave }) => {
+const AddTheaterModal: React.FC<AddTheaterModalProps> = ({ show, handleClose, handleSave, errorMessage }) => {
   const [theaterData, setTheaterData] = useState({
     name: "",
     numberOfRows: 0,
     numberOfColumns: 0,
   });
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!show) {
       setTheaterData({ name: "", numberOfRows:0, numberOfColumns:0 });
-      setErrorMessage(""); 
     }
   }, [show]);
 
@@ -31,28 +30,15 @@ const AddTheaterModal: React.FC<AddTheaterModalProps> = ({ show, handleClose, ha
       [name]: name === "name" ? value : Math.max(0, parseInt(value, 10) || 0), // Ensure numbers are non-negative
     }));
 
-    setErrorMessage(""); // Reset error when input changes
   };
 
   const handleSubmit = () => {
-    if (!theaterData.name.trim()) {
-      setErrorMessage("❌ Theater name can't be empty");
-      return;
-    }
-    if (theaterData.numberOfRows <= 0 || theaterData.numberOfColumns <= 0) {
-      setErrorMessage("❌ Number of rows and columns must be greater than zero");
-      return;
-    }
-
     handleSave({
       name: theaterData.name.trim(),
       numberOfRows: theaterData.numberOfRows,
       numberOfColumns: theaterData.numberOfColumns,
     });
 
-    setTheaterData({ name: "", numberOfRows:0, numberOfColumns:0 });
-    setErrorMessage(""); // Clear error on successful save
-    handleClose();
   };
 
 
@@ -63,6 +49,7 @@ const AddTheaterModal: React.FC<AddTheaterModalProps> = ({ show, handleClose, ha
           <div className="modal-header">
             <h5 className="modal-title">Add Theater</h5>
           </div>
+          {errorMessage && (<div className="alert alert-danger mt-2" role="alert">{errorMessage}</div>)}
           <div className="modal-body">
             <label>Name</label>
             <input
@@ -90,8 +77,6 @@ const AddTheaterModal: React.FC<AddTheaterModalProps> = ({ show, handleClose, ha
               onChange={handleChange}
               min="1"
             />
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
-
           </div>
           <div className="modal-footer">
             <button className="cancel-btn" onClick={handleClose}>Cancel ❌</button>
