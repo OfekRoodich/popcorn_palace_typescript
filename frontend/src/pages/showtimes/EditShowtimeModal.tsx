@@ -68,6 +68,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
   }, [show, showtimeData.theaterId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    
     const { name, value } = e.target;
     const parsedValue = name === "movieId" || name === "theaterId" || name === "price" ? parseInt(value, 10) : value;
     setShowtimeData((prev) => ({ ...prev, [name]: parsedValue }));
@@ -185,3 +186,4 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({ show, handleClose
 };
 
 export default EditShowtimeModal;
+

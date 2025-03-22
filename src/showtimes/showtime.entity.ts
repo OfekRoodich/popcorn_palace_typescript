@@ -24,4 +24,10 @@ export class Showtime {
 
   @Column('timestamp')
   startTime: Date;
+
+  @Column("int", { array: true, nullable: false })
+  seatMatrix: number[][];
+
+  @Column({ default: 0 })
+  bookedCount: number;
 }

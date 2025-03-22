@@ -2,12 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Showtime } from './showtime.entity';
+import { Theater } from '../theaters/theater.entity';
+
 
 @Injectable()
 export class ShowtimesService {
   constructor(
     @InjectRepository(Showtime)
     private readonly showtimeRepository: Repository<Showtime>,
+
+    @InjectRepository(Theater)
+  private readonly theaterRepository: Repository<Theater>,
   ) {}
 
   async findAll(): Promise<Showtime[]> {
@@ -22,11 +27,26 @@ export class ShowtimesService {
   }
 
   async create(data: Partial<Showtime>): Promise<Showtime> {
+    const theater = await this.theaterRepository.findOne({ where: { id: (data as any).theaterId } });
+  
+    if (!theater) {
+      throw new Error("Theater not found");
+    }
+  
+    const rows = theater.numberOfRows;
+    const cols = theater.numberOfColumns;
+  
+    const seatMatrix = Array.from({ length: rows }, () =>
+      Array.from({ length: cols }, () => 0)
+    );
+  
     const showtime = this.showtimeRepository.create({
       movie: { id: data.movieId },
       theater: { id: (data as any).theaterId },
       startTime: data.startTime,
       price: data.price,
+      seatMatrix,
+      bookedCount: 0
     });
   
     const savedShowtime = await this.showtimeRepository.save(showtime);
@@ -36,6 +56,7 @@ export class ShowtimesService {
       relations: ['movie', 'theater'],
     });
   }
+  
   
   async findAllForTheater(theaterId: number): Promise<Showtime[]> {
   
@@ -69,5 +90,18 @@ export class ShowtimesService {
   async delete(id: number): Promise<any> {
     return this.showtimeRepository.delete(id);
   }
+
+  async updateSeatMatrix(id: number, seatMatrix: number[][]): Promise<Showtime> {
+    await this.showtimeRepository.update(id, {
+      seatMatrix,
+      bookedCount: seatMatrix.flat().filter(seat => seat === 2).length
+    });
+  
+    return this.showtimeRepository.findOne({
+      where: { id },
+      relations: ['movie', 'theater']
+    });
+  }
+  
 
 }

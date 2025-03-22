@@ -36,6 +36,14 @@ export class ShowtimesController {
     return this.showtimesService.delete(id);
   }
 
+  @Put(':id/seats')
+updateSeats(
+  @Param('id') id: number,
+  @Body('seatMatrix') seatMatrix: number[][]
+) {
+  return this.showtimesService.updateSeatMatrix(id, seatMatrix);
+}
+
   
   
 

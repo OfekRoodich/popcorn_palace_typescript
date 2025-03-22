@@ -70,7 +70,6 @@ const TheatersPage: React.FC = () => {
       <div className="back-btn-container">
         <button className="menu-btn" onClick={() => setShowModal(true)}>Add Theater ➕</button>
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
-
       </div>
       <h1 className="theaters-title">Theaters 🎦</h1>
       <TableContainer component={Paper}>
