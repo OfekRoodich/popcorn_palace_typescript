@@ -80,7 +80,7 @@ const EditTheaterModal: React.FC<EditTheaterModalProps> = ({ show, handleClose, 
           <div className="modal-body">
             {showAlert && (
               <div className="alert alert-warning alert-dismissible fade show" role="alert">
-                <strong>⚠️ Warning:</strong> Editing this row or columns will be relant to new showtimes only!
+                <strong>⚠️ Warning:</strong> Editing this row or columns will be relevant to new showtimes only!
                 <button
                   type="button"
                   className="btn-close"

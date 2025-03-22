@@ -24,7 +24,7 @@ export class MoviesController {
 
   @Post()
   async create(@Body() movie: Partial<Movie>): Promise<Movie> { // Returning explicitly the missing fields if missing
-    if (!movie.title || movie.title.trim.length==0)
+    if (!movie.title || !movie.title.trim)
       throw new BadRequestException("⚠️ Movie title can't be empty");
     if (!movie.genre)
       throw new BadRequestException("⚠️ Movie genre can't be empty");
@@ -58,9 +58,9 @@ export class MoviesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() movie: Partial<Movie>,
   ) {
-    if (!movie.title || movie.title.trim().length === 0)
+    if (!movie.title || !movie.title.trim)
       throw new BadRequestException("⚠️ Movie title can't be empty");
-    if (!movie.genre || movie.genre.trim().length === 0)
+    if (!movie.genre || !movie.genre.trim())
       throw new BadRequestException("⚠️ Movie genre can't be empty");
     if (movie.duration === undefined || movie.duration === null)
       throw new BadRequestException("⚠️ Movie duration can't be empty");
