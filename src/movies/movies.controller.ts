@@ -13,6 +13,7 @@ export class MoviesController {
 
   @Post()
   create(@Body() movie: Partial<Movie>): Promise<Movie> {
+    console.log("📥 Incoming movie:", movie); // Add this
     return this.moviesService.create(movie);
   }
 
