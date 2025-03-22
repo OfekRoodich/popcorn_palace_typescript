@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../../styles/movies/MoviesPage.css";
 import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import AddMovieModal from "./AddMovieModal";
 import EditMovieModal from "./EditMovieModal";
-import ConfirmModal from "../general/ConfirmModal"; // ✅ Make sure this path is correct
+import ConfirmModal from "../general/ConfirmModal"; 
+import "../../styles/movies/MoviesPage.css";
+import "../../styles/general/GeneralPage.css";
 
 const MoviesPage: React.FC = () => {
   const [movies, setMovies] = useState<

@@ -2,7 +2,6 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import "../../styles/theaters/TheatersPage.css";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -14,6 +13,7 @@ import Tooltip from "@mui/material/Tooltip";
 import AddTheaterModal from "./AddTheaterModal";
 import EditTheaterModal from "./EditTheaterModal";
 import ConfirmModal from "../general/ConfirmModal";
+import "../../styles/theaters/TheatersPage.css";
 
 const TheatersPage: React.FC = () => {
   const [theaters, setTheaters] = useState<{ id: number; name: string; numberOfRows: number; numberOfColumns: number }[]>([]);
@@ -85,7 +85,7 @@ const TheatersPage: React.FC = () => {
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
       </div>
       <div className="theaters-content">
-        <h1 className="theaters-title">Theaters 🎦</h1>
+        <h1 className="theaters-title">Theaters 🎥</h1>
         <TableContainer className="theaters-table" component={Paper}>
           <Table sx={{ minWidth: 650 }} aria-label="simple table">
             <TableHead>

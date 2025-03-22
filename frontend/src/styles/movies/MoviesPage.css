@@ -38,11 +38,7 @@
   left: 5px;
   bottom: 5px;
 }
-.back-btn-container {
-  display: flex;
-  justify-content: space-between; 
-  padding: 10px;
-}
+
 .menu-btn {
   padding: 20px;
   background: none;
