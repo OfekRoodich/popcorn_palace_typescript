@@ -71,43 +71,46 @@ const TheatersPage: React.FC = () => {
         <button className="menu-btn" onClick={() => setShowModal(true)}>Add Theater ➕</button>
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
       </div>
-      <h1 className="theaters-title">Theaters 🎦</h1>
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Rows</strong></TableCell>
-              <TableCell><strong>Columns</strong></TableCell>
-              <TableCell align="right"><strong>Edit</strong></TableCell>
-              <TableCell align="right"><strong>Delete</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {theaters.map((theater) => (
-              <TableRow key={theater.id}>
-                <TableCell>{theater.name}</TableCell>
-                <TableCell>{theater.numberOfRows}</TableCell>
-                <TableCell>{theater.numberOfColumns}</TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <button className="edit-btn" onClick={() => handleEdit(theater)}>✏️</button>
-                  </Tooltip>
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Delete">
-                    <button className="delete-btn" onClick={() => handleDelete(theater.id)}>🗑️</button>
-                  </Tooltip>
-                </TableCell>
+      <div className="theaters-content">
+        <h1 className="theaters-title">Theaters 🎦</h1>
+        <TableContainer className="theaters-table" component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Rows</strong></TableCell>
+                <TableCell><strong>Columns</strong></TableCell>
+                <TableCell align="right"><strong>Edit</strong></TableCell>
+                <TableCell align="right"><strong>Delete</strong></TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {theaters.map((theater) => (
+                <TableRow key={theater.id}>
+                  <TableCell>{theater.name}</TableCell>
+                  <TableCell>{theater.numberOfRows}</TableCell>
+                  <TableCell>{theater.numberOfColumns}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <button className="edit-btn" onClick={() => handleEdit(theater)}>✏️</button>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Delete">
+                      <button className="delete-btn" onClick={() => handleDelete(theater.id)}>🗑️</button>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      <AddTheaterModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddTheater} />
-      <EditTheaterModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateTheater} theater={selectedTheater} />
+        <AddTheaterModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleAddTheater} />
+        <EditTheaterModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateTheater} theater={selectedTheater} />
+      </div>
     </div>
+
   );
 };
 
