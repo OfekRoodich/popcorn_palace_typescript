@@ -9,7 +9,6 @@ import {
   BadRequestException,
   NotFoundException,
   ParseIntPipe,
-  Put,
 } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
 import { TheatersService } from '../theaters/theaters.service';
@@ -73,12 +72,12 @@ export class ShowtimesController {
     return this.showtimesService.delete(id);
   }
 
-  @Put(':id/seats')
+  @Post(':id/seats')
   updateSeats(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { selectedSeats: [number, number][] },
   ) {
-    return this.showtimesService.updateSeatMatrix(id, body.selectedSeats);
+    // return this.showtimesService.updateSeatMatrix(id, body.selectedSeats);
   }
 
   private validateShowtime(showtime: Partial<Showtime>) {
