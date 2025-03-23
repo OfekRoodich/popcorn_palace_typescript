@@ -10,6 +10,7 @@ describe('MoviesService', () => {
 
   const mockMovieRepository = {
     find: jest.fn(),
+    findOne: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -57,6 +58,45 @@ describe('MoviesService', () => {
     it('should throw if repository fails', async () => {
       mockMovieRepository.find.mockRejectedValue(new Error('DB error'));
       await expect(service.findAll()).rejects.toThrow('DB error');
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a movie by ID', async () => {
+      const mockMovie = { id: 1, title: 'Test Movie' } as Movie;
+      mockMovieRepository.findOne.mockResolvedValue(mockMovie);
+
+      const result = await service.findOne(1);
+      expect(result).toEqual(mockMovie);
+      expect(mockMovieRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+
+    it('should return null if not found', async () => {
+      mockMovieRepository.findOne.mockResolvedValue(null);
+      const result = await service.findOne(999);
+      expect(result).toBeNull();
+    });
+
+    it('should throw if findOne fails', async () => {
+      mockMovieRepository.findOne.mockRejectedValue(new Error('Find failed'));
+      await expect(service.findOne(1)).rejects.toThrow('Find failed');
+    });
+  });
+
+  describe('findByTitle', () => {
+    it('should return movie by title', async () => {
+      const mockMovie = { id: 1, title: 'Test Movie' } as Movie;
+      mockMovieRepository.findOne.mockResolvedValue(mockMovie);
+
+      const result = await service.findByTitle('Test Movie');
+      expect(result).toEqual(mockMovie);
+      expect(mockMovieRepository.findOne).toHaveBeenCalledWith({ where: { title: 'Test Movie' } });
+    });
+
+    it('should return null if not found', async () => {
+      mockMovieRepository.findOne.mockResolvedValue(null);
+      const result = await service.findByTitle('Not Found');
+      expect(result).toBeNull();
     });
   });
 
