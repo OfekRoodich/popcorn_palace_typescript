@@ -58,7 +58,7 @@ const BookingPage: React.FC = () => {
       setTimeout(() => {
         setShowSuccess(false);
         handleBack();
-      }, 2500);
+      }, 1000);
     })
     .catch((error) => {
       const message = error.response?.data?.message || "❌ Failed to edit showtime.";

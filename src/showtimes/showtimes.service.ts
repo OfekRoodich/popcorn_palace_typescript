@@ -101,6 +101,51 @@ export class ShowtimesService {
     });
   }
   
+  async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
+    const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater'] });
+    if (!existing) throw new NotFoundException(`Showtime with ID ${id} not found`);
+  
+    const updateData: any = {
+      startTime: data.startTime,
+      price: data.price,
+    };
+  
+    let recreateMatrix = false;
+    let rows = 0;
+    let cols = 0;
+  
+    // 👇 Check if theaterId changed
+    if ((data as any).theaterId && (data as any).theaterId !== existing.theater.id) {
+      if (existing.bookedCount > 0) {
+        throw new BadRequestException("⚠️ Cannot change theater for a showtime with booked tickets.");
+      }
+  
+      const newTheater = await this.theaterRepository.findOne({ where: { id: (data as any).theaterId } });
+      if (!newTheater) throw new NotFoundException(`Theater with ID ${(data as any).theaterId} not found`);
+  
+      rows = newTheater.numberOfRows;
+      cols = newTheater.numberOfColumns;
+      recreateMatrix = true;
+      updateData.theater = { id: (data as any).theaterId };
+    }
+  
+    if (data.movieId) {
+      updateData.movie = { id: data.movieId };
+    }
+  
+    // 👇 Only allow matrix recreation if no seats are booked
+    if (recreateMatrix) {
+      updateData.seatMatrix = Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => 0)
+      );
+      updateData.bookedCount = 0;
+    }
+  
+    await this.showtimeRepository.update(id, updateData);
+  
+    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
+  }
+  
   
 
   async delete(id: number): Promise<any> {
