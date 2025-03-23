@@ -4,7 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useNavigate } from "react-router-dom";
 import AddMovieModal from "./AddMovieModal";
 import EditMovieModal from "./EditMovieModal";
-import ConfirmModal from "../general/ConfirmModal"; 
+import ConfirmModal from "../general/ConfirmModal";
 import "../../styles/movies/MoviesPage.css";
 import "../../styles/general/GeneralPage.css";
 
@@ -19,30 +19,30 @@ const MoviesPage: React.FC = () => {
   const [addError, setAddError] = useState("");
 
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [movieToDelete, setMovieToDelete] = useState<number | null>(null);
+  const [movieToDelete, setMovieToDelete] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
+      .get(`${process.env.REACT_APP_API_BASE_URL}/movies/all`)
       .then((response) => setMovies(response.data))
       .catch((error) => console.error("Error fetching movies:", error));
   }, []);
 
   const handleBack = () => navigate("/");
 
-  const confirmDelete = (id: number) => {
-    setMovieToDelete(id);
+  const confirmDelete = (title: string) => {
+    setMovieToDelete(title);
     setConfirmVisible(true);
   };
 
   const handleConfirmDelete = () => {
     if (movieToDelete !== null) {
       axios
-        .delete(`${process.env.REACT_APP_API_BASE_URL}/movies/${movieToDelete}`)
+        .delete(`${process.env.REACT_APP_API_BASE_URL}/movies/${encodeURIComponent(movieToDelete)}`)
         .then(() => {
-          setMovies(movies.filter((movie) => movie.id !== movieToDelete));
+          setMovies(movies.filter((movie) => movie.title !== movieToDelete));
           setConfirmVisible(false);
         })
         .catch((error) => {
@@ -59,8 +59,8 @@ const MoviesPage: React.FC = () => {
 
   const handleUpdateMovie = async (updatedMovie: any) => {
     try {
-      await axios.put(`${process.env.REACT_APP_API_BASE_URL}/movies/${updatedMovie.id}`, updatedMovie);
-      setMovies(movies.map((movie) => (movie.id === updatedMovie.id ? updatedMovie : movie)));
+      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/movies/update/${encodeURIComponent(updatedMovie.title)}`, updatedMovie);
+      setMovies(movies.map((movie) => (movie.title === updatedMovie.title ? updatedMovie : movie)));
       setShowEditModal(false);
       setEditError("");
     } catch (error: any) {
@@ -101,7 +101,7 @@ const MoviesPage: React.FC = () => {
                 <button className="edit-btn" onClick={() => handleEdit(movie)}>✏️</button>
               </Tooltip>
               <Tooltip title="Delete">
-                <button className="delete-btn" onClick={() => confirmDelete(movie.id)}>🗑️</button>
+                <button className="delete-btn" onClick={() => confirmDelete(movie.title)}>🗑️</button>
               </Tooltip>
             </div>
             <div className="card-body">
