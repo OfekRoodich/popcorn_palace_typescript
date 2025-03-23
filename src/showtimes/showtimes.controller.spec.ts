@@ -1,12 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShowtimesController } from './showtimes.controller';
+import { ShowtimesService } from './showtimes.service';
+import { MoviesService } from '../movies/movies.service';
+import { TheatersService } from '../theaters/theaters.service';
 
 describe('ShowtimesController', () => {
   let controller: ShowtimesController;
 
+  const mockShowtimesService = {
+    findAll: jest.fn(),
+    findAllForTheater: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    updateSeatMatrix: jest.fn(),
+  };
+
+  const mockMoviesService = {
+    findOne: jest.fn(),
+  };
+
+  const mockTheatersService = {
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ShowtimesController],
+      providers: [
+        { provide: ShowtimesService, useValue: mockShowtimesService },
+        { provide: MoviesService, useValue: mockMoviesService },
+        { provide: TheatersService, useValue: mockTheatersService },
+      ],
     }).compile();
 
     controller = module.get<ShowtimesController>(ShowtimesController);
@@ -14,5 +40,16 @@ describe('ShowtimesController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  // Example controller test:
+  it('should call findAll service method when no theaterId is passed', async () => {
+    await controller.findAll();
+    expect(mockShowtimesService.findAll).toHaveBeenCalled();
+  });
+
+  it('should call findAllForTheater when theaterId is passed', async () => {
+    await controller.findAll("1");
+    expect(mockShowtimesService.findAllForTheater).toHaveBeenCalledWith(1);
   });
 });

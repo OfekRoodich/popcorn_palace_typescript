@@ -173,7 +173,7 @@ const ShowtimesPage: React.FC = () => {
           handleSave={handleAddShowtime}
           errorMessage={addError}
           />      
-      <EditShowtimeModal show={showEditModal} handleClose={() => setShowEditModal(false)} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime}  errorMessage={editError}/>
+      <EditShowtimeModal show={showEditModal} handleClose={() => {setShowEditModal(false); setEditError("")}} handleUpdate={handleUpdateShowtime} showtime={selectedShowtime}  errorMessage={editError}/>
     </div>
   );
 };
