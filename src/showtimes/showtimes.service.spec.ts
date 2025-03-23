@@ -59,4 +59,6 @@ describe('ShowtimesController', () => {
 
     await expect(controller.update(1, updateDto)).rejects.toThrow('⚠️ Cannot update a showtime with booked tickets');
   });
+
+  
 });

@@ -69,25 +69,22 @@ export class ShowtimesService {
   }
   
   
-  async updateSeatMatrix(id: number, seatMatrix: number[][]): Promise<Showtime> {
+  async updateSeatMatrix(id: number, selectedSeats: [number, number][]): Promise<Showtime> {
+    console.log(selectedSeats)
+
     const showtime = await this.showtimeRepository.findOne({ where: { id } });
   
     if (!showtime) throw new NotFoundException(`Showtime ${id} not found`);
   
-    const currentSeats = showtime.seatMatrix;
-    console.log("old seats:",seatMatrix)
-    console.log("new seats:",currentSeats)
-    for (let row = 0; row < seatMatrix.length; row++) {
-      for (let col = 0; col < seatMatrix[row].length; col++) {
-        const newSeat = seatMatrix[row][col];
-        const oldSeat = currentSeats[row][col];
-        
-        if (newSeat == 3 && oldSeat == 2) {
-          throw new BadRequestException(`⚠️ Seat ${col + 1} on row ${row + 1} is already booked. Refresh your page and book again`);
-        }
-        if (newSeat == 3 && oldSeat == 0)
-            seatMatrix[row][col]=2;
+    const seatMatrix = showtime.seatMatrix;
+  
+    for (const [row, col] of selectedSeats) {
+      if (seatMatrix[row][col] === 2) {
+        throw new BadRequestException(
+          `⚠️ Seat ${col + 1} on row ${row + 1} is already booked. Refresh and try again.`
+        );
       }
+      seatMatrix[row][col] = 2; // Mark seat as booked
     }
   
     await this.showtimeRepository.update(id, {
@@ -100,6 +97,7 @@ export class ShowtimesService {
       relations: ['movie', 'theater'],
     });
   }
+  
   
   async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
     const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater'] });

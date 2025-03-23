@@ -34,9 +34,9 @@ const BookingPage: React.FC = () => {
       const current = updated[row][col];
 
       if (current === 0) {
-        updated[row][col] = 1; // select
+        updated[row][col] = 1; 
       } else if (current === 1) {
-        updated[row][col] = 0; // unselect
+        updated[row][col] = 0; 
       }
 
       return updated;
@@ -44,14 +44,19 @@ const BookingPage: React.FC = () => {
   };
 
   const handleOrder = () => {
-    const updatedMatrix = seatMatrix.map(row =>
-      row.map(seat => (seat === 1 ? 3 : seat))
-    );
+    console.log("🔥 handleOrder triggered");
+    const selectedSeats: [number, number][] = [];
 
-    setSeatMatrix(updatedMatrix);
-
+    seatMatrix.forEach((row, rowIndex) => {
+      row.forEach((seat, colIndex) => {
+        if (seat === 1) {
+          selectedSeats.push([rowIndex, colIndex]);
+        }
+      });
+    });
+    console.log("Ofek selected seats",seatMatrix, selectedSeats)
     axios.put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${id}/seats`, {
-      seatMatrix: updatedMatrix
+      selectedSeats: selectedSeats,
     })
     .then(() => {
       setShowSuccess(true);
@@ -61,10 +66,11 @@ const BookingPage: React.FC = () => {
       }, 1000);
     })
     .catch((error) => {
-      const message = error.response?.data?.message || "❌ Failed to edit showtime.";
+      const message = error.response?.data?.message || "❌ Failed to book seats.";
       setBookingError(message);
     });
   };
+  
 
   const handleBack = () => {
     navigate("/showtimes");
@@ -119,7 +125,10 @@ const BookingPage: React.FC = () => {
       <div className="oreder-contianer">
         <button
           className="order-btn"
-          onClick={handleOrder}
+          onClick={() => {
+            console.log("🚀 Button clicked");
+            handleOrder();
+          }}
           disabled={!seatMatrix.some(row => row.includes(1))}
         >
           Order

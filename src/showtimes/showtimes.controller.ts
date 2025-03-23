@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query,BadRequestException,NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query,BadRequestException,NotFoundException,ParseIntPipe } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
 import { TheatersService } from '../theaters/theaters.service';
 import { MoviesService } from '../movies/movies.service';
@@ -127,12 +127,14 @@ async update(@Param('id') id: number, @Body() showtime: Partial<Showtime>) {
   }
 
   @Put(':id/seats')
-updateSeats(
-  @Param('id') id: number,
-  @Body('seatMatrix') seatMatrix: number[][]
-) {
-  return this.showtimesService.updateSeatMatrix(id, seatMatrix);
-}
+  updateSeats(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { selectedSeats: [number, number][] }
+  ) {
+    return this.showtimesService.updateSeatMatrix(id, body.selectedSeats);
+  }
+  
+  
 
 
 

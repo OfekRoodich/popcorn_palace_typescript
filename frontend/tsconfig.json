@@ -21,6 +21,5 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
-, "../src/app.service.spec.ts"  ]
+    "src"]
 }
