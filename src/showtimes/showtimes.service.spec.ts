@@ -43,22 +43,44 @@ describe('ShowtimesController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should throw when trying to update a showtime with booked tickets', async () => {
-    const updateDto = {
+  describe('update (POST /showtimes/update/:id)', () => {
+    const updateData = {
       movieId: 1,
       theaterId: 2,
       price: 50,
-      startTime: new Date(),
+      startTime: new Date('2025-02-14T11:47:46.125Z'),
     };
 
-    mockMoviesService.findOne.mockResolvedValue({ id: 1 });
-    mockTheatersService.findOne.mockResolvedValue({ id: 2 });
-    mockShowtimesService.update.mockImplementation(() => {
-      throw new BadRequestException('⚠️ Cannot update a showtime with booked tickets');
+    it('should throw a BadRequestException if update fails due to booking conflict', async () => {
+      mockMoviesService.findOne.mockResolvedValue({ id: 1 });
+      mockTheatersService.findOne.mockResolvedValue({ id: 2 });
+      mockShowtimesService.update.mockImplementation(() => {
+        throw new BadRequestException('⚠️ Cannot update a showtime with booked tickets');
+      });
+
+      await expect(controller.update(1, updateData)).rejects.toThrow('⚠️ Cannot update a showtime with booked tickets');
     });
 
-    await expect(controller.update(1, updateDto)).rejects.toThrow('⚠️ Cannot update a showtime with booked tickets');
-  });
+    it('should return updated showtime with endTime included', async () => {
+      const updated = {
+        id: 1,
+        ...updateData,
+        endTime: new Date('2025-02-14T14:47:46.125Z'),
+      };
 
-  
+      mockMoviesService.findOne.mockResolvedValue({ id: 1 });
+      mockTheatersService.findOne.mockResolvedValue({ id: 2 });
+      mockShowtimesService.update.mockResolvedValue(updated);
+
+      const result = await controller.update(1, updateData);
+
+      expect(result).toEqual({
+        message: 'Showtime 1 updated successfully',
+        updated,
+      });
+
+      expect(result.updated.endTime).toBeInstanceOf(Date);
+      expect(mockShowtimesService.update).toHaveBeenCalledWith(1, updateData);
+    });
+  });
 });

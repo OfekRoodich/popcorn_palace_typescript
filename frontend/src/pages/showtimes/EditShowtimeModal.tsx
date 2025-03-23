@@ -21,7 +21,6 @@ interface EditShowtimeModalProps {
     price: number;
   } | null;
   errorMessage?: string;
-
 }
 
 const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
@@ -37,6 +36,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
     { id: number; startTime: string; movie: { duration: number }; theaterId: number }[]
   >([]);
   const [movieDuration, setMovieDuration] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const [showtimeData, setShowtimeData] = useState({
@@ -49,7 +49,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
   useEffect(() => {
     if (show) {
       axios
-        .get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
+        .get(`${process.env.REACT_APP_API_BASE_URL}/movies/all`)
         .then((response) => setMovies(response.data))
         .catch((error) => console.error("Error fetching movies:", error));
 
@@ -59,6 +59,7 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
         .catch((error) => console.error("Error fetching theaters:", error));
     } else {
       setMovieDuration(null);
+      setEndTime(null);
       setExistingShowtimes([]);
       setError("");
     }
@@ -92,6 +93,16 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
         .catch((err) => console.error("Error fetching showtimes:", err));
     }
   }, [show, showtimeData.theaterId]);
+
+  useEffect(() => {
+    if (showtimeData.startTime && movieDuration) {
+      const start = new Date(showtimeData.startTime);
+      const end = new Date(start.getTime() + movieDuration * 60000);
+      setEndTime(end.toLocaleString());
+    } else {
+      setEndTime(null);
+    }
+  }, [showtimeData.startTime, movieDuration]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -149,7 +160,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
       startTime: showtimeData.startTime,
       price: showtimeData.price,
     });
-
   };
 
   return (
@@ -218,7 +228,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
                   onChange={handleChange}
                 />
               </div>
-
               <div className="form-group">
                 <label>Price</label>
                 <input

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { v4 as uuidv4 } from 'uuid';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/booking/BookingPage.css";
 import "../../styles/general/GeneralPage.css";
@@ -11,8 +12,8 @@ const BookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [showtime, setShowtime] = useState<any>(null);
   const [seatMatrix, setSeatMatrix] = useState<number[][]>([]);
-  const [showSuccess, setShowSuccess] = useState(false); // ✅ success alert
-  const [errorMessage,setBookingError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setBookingError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,21 +31,18 @@ const BookingPage: React.FC = () => {
 
   const toggleSeat = (row: number, col: number) => {
     setSeatMatrix(prevMatrix => {
-      const updated = prevMatrix.map(r => [...r]); // deep copy
+      const updated = prevMatrix.map(r => [...r]);
       const current = updated[row][col];
-
       if (current === 0) {
-        updated[row][col] = 1; 
+        updated[row][col] = 1;
       } else if (current === 1) {
-        updated[row][col] = 0; 
+        updated[row][col] = 0;
       }
-
       return updated;
     });
   };
 
   const handleOrder = () => {
-    console.log("🔥 handleOrder triggered");
     const selectedSeats: [number, number][] = [];
 
     seatMatrix.forEach((row, rowIndex) => {
@@ -54,9 +52,22 @@ const BookingPage: React.FC = () => {
         }
       });
     });
-    console.log("Ofek selected seats",seatMatrix, selectedSeats)
+
     axios.put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${id}/seats`, {
-      selectedSeats: selectedSeats,
+      selectedSeats,
+    })
+    .then(() => {
+      const bookingCalls = selectedSeats.map(([row, col]) => {
+        const seatID = row * showtime.theater.numberOfColumns + col;
+        console.log(seatID)
+        return axios.post(`${process.env.REACT_APP_API_BASE_URL}/bookings`, {
+          showtimeId: showtime.id,
+          seatNumber: seatID,
+          userId: uuidv4(), 
+        });
+      });
+
+      return Promise.all(bookingCalls);
     })
     .then(() => {
       setShowSuccess(true);
@@ -70,7 +81,6 @@ const BookingPage: React.FC = () => {
       setBookingError(message);
     });
   };
-  
 
   const handleBack = () => {
     navigate("/showtimes");
@@ -101,7 +111,8 @@ const BookingPage: React.FC = () => {
         Booking for: <strong>{showtime.movie?.title}</strong>
       </h2>
       <p>
-        Showtime: {new Date(showtime.startTime).toLocaleString()}
+        Showtime: {new Date(showtime.startTime).toLocaleString()} →{" "}
+        {new Date(showtime.endTime).toLocaleString()}
       </p>
 
       <div className="seats-grid">
@@ -125,10 +136,7 @@ const BookingPage: React.FC = () => {
       <div className="oreder-contianer">
         <button
           className="order-btn"
-          onClick={() => {
-            console.log("🚀 Button clicked");
-            handleOrder();
-          }}
+          onClick={handleOrder}
           disabled={!seatMatrix.some(row => row.includes(1))}
         >
           Order

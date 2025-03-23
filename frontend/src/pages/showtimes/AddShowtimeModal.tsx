@@ -8,15 +8,16 @@ interface AddShowtimeModalProps {
   handleClose: () => void;
   handleSave: (showtime: { movieId: number; theaterId: number; startTime: string; price: number }) => void;
   errorMessage?: string;
-
 }
 
-const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave,errorMessage }) => {
+const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, handleSave, errorMessage }) => {
   const [movies, setMovies] = useState<{ id: number; title: string }[]>([]);
   const [theaters, setTheaters] = useState<{ id: number; name: string }[]>([]);
   const [existingShowtimes, setExistingShowtimes] = useState<
-  { startTime: string; movie: { duration: number }; theaterId:number }[]
->([]);  const [movieDuration, setMovieDuration] = useState<number | null>(null);
+    { startTime: string; movie: { duration: number }; theaterId: number }[]
+  >([]);
+  const [movieDuration, setMovieDuration] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
 
   const [showtimeData, setShowtimeData] = useState({
     movieId: 0,
@@ -27,41 +28,49 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
 
   useEffect(() => {
     if (showtimeData.movieId) {
-      axios.get(`${process.env.REACT_APP_API_BASE_URL}/movies/${showtimeData.movieId}`)
-        .then((res) => {
-          console.log("🎬 Selected Movie Data:", res.data); // Debugging
-          setMovieDuration(res.data.duration); // Store the duration for validation
-        })
+      axios
+        .get(`${process.env.REACT_APP_API_BASE_URL}/movies/${showtimeData.movieId}`)
+        .then((res) => setMovieDuration(res.data.duration))
         .catch((err) => console.error("Error fetching movie duration:", err));
     }
   }, [showtimeData.movieId]);
 
   useEffect(() => {
+    if (showtimeData.startTime && movieDuration) {
+      const start = new Date(showtimeData.startTime);
+      const end = new Date(start.getTime() + movieDuration * 60000);
+      setEndTime(end.toLocaleString());
+    } else {
+      setEndTime(null);
+    }
+  }, [showtimeData.startTime, movieDuration]);
+
+  useEffect(() => {
     if (showtimeData.theaterId) {
-      console.log("🔵 Fetching showtimes for theaterId:", showtimeData.theaterId);
-      
-      axios.get(`${process.env.REACT_APP_API_BASE_URL}/showtimes?theaterId=${showtimeData.theaterId}`)
-        .then((res) => {
-          console.log("✅ Received showtimes:", res.data);
-          setExistingShowtimes(res.data);
-        })
+      axios
+        .get(`${process.env.REACT_APP_API_BASE_URL}/showtimes?theaterId=${showtimeData.theaterId}`)
+        .then((res) => setExistingShowtimes(res.data))
         .catch((err) => console.error("❌ Error fetching showtimes:", err));
     }
   }, [showtimeData.theaterId]);
 
   useEffect(() => {
     if (show) {
-      axios.get(`${process.env.REACT_APP_API_BASE_URL}/movies`)
+      axios
+        .get(`${process.env.REACT_APP_API_BASE_URL}/movies/all`)
         .then((response) => setMovies(response.data))
         .catch((error) => console.error("Error fetching movies:", error));
 
-      axios.get(`${process.env.REACT_APP_API_BASE_URL}/theaters`)
+      axios
+        .get(`${process.env.REACT_APP_API_BASE_URL}/theaters`)
         .then((response) => setTheaters(response.data))
         .catch((error) => console.error("Error fetching theaters:", error));
-    }
-    else
+    } else {
       setShowtimeData({ movieId: 0, theaterId: 0, startTime: "", price: 0 });
-
+      setMovieDuration(null);
+      setEndTime(null);
+      setExistingShowtimes([]);
+    }
   }, [show]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -72,26 +81,22 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
   const isFormInvalid = Object.values(showtimeData).some((value) => value === "");
 
   const validateNoOverlap = (): boolean => {
-  if (!movieDuration || !showtimeData.startTime) {
-    return true; 
-  }
+    if (!movieDuration || !showtimeData.startTime) return true;
 
-  const newStart = new Date(showtimeData.startTime).getTime();
-  const newEnd = new Date(newStart + movieDuration * 60000).getTime(); // Use the selected movie's duration
+    const newStart = new Date(showtimeData.startTime).getTime();
+    const newEnd = newStart + movieDuration * 60000;
 
-  console.log("🟢 New Show Start:", newStart, "End:", newEnd);
-  
-  let count=1;
-  return !existingShowtimes.some((show) => {
+    return !existingShowtimes.some((show) => {
+      const existingStart = new Date(show.startTime).getTime();
+      const existingEnd = existingStart + show.movie.duration * 60000;
 
-    const existingStart = new Date(show.startTime).getTime(); // ✅ Convert to Date first
-    const existingEnd = new Date(existingStart + show.movie.duration * 60000).getTime(); // ✅ Add duration properly
-
-    return ( (newStart>=existingStart && newStart<=existingEnd) || (newEnd>=existingStart && newEnd<=existingEnd) || 
-  (newStart<=existingStart && newEnd>=existingEnd))});
-};
-
-  
+      return (
+        (newStart >= existingStart && newStart < existingEnd) ||
+        (newEnd > existingStart && newEnd <= existingEnd) ||
+        (newStart <= existingStart && newEnd >= existingEnd)
+      );
+    });
+  };
 
   const handleSubmit = () => {
     if (isFormInvalid) {
@@ -103,21 +108,19 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       alert("⏳ Please wait for the movie duration to load.");
       return;
     }
-    const isOverlapping = validateNoOverlap();
-    if (!isOverlapping) {
-      alert("❌ This theater is unavaileble, because it already shows a movie at this times");
+
+    if (!validateNoOverlap()) {
+      alert("❌ This theater already has a movie scheduled at that time.");
       return;
     }
-  
+
     handleSave({
       movieId: showtimeData.movieId,
       theaterId: showtimeData.theaterId,
       startTime: showtimeData.startTime,
       price: showtimeData.price,
     });
-
   };
-  
 
   return (
     <div className={`modal fade ${show ? "show d-block" : ""}`} tabIndex={-1} role="dialog">
@@ -126,10 +129,13 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
           <div className="modal-header">
             <h5 className="modal-title">Add a New Showtime</h5>
           </div>
-          {errorMessage && (<div className="alert alert-danger mt-2" role="alert">{errorMessage}</div>)}
+          {errorMessage && (
+            <div className="alert alert-danger mt-2" role="alert">
+              {errorMessage}
+            </div>
+          )}
           <div className="modal-body">
             <form>
-              {/* Movie Selection */}
               <div className="form-group">
                 <label>Movie</label>
                 <select className="form-control" name="movieId" value={showtimeData.movieId} onChange={handleChange}>
@@ -142,7 +148,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
                 </select>
               </div>
 
-              {/* Theater Selection */}
               <div className="form-group">
                 <label>Theater</label>
                 <select className="form-control" name="theaterId" value={showtimeData.theaterId} onChange={handleChange}>
@@ -155,7 +160,6 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
                 </select>
               </div>
 
-              {/* Start Time */}
               <div className="form-group">
                 <label>Start Time</label>
                 <input
@@ -167,7 +171,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
                 />
               </div>
 
-              {/* Price */}
+
               <div className="form-group">
                 <label>Price</label>
                 <input
@@ -181,7 +185,9 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
             </form>
           </div>
           <div className="modal-footer">
-            <button className="cancel-btn" onClick={handleClose}>Cancel ❌</button>
+            <button className="cancel-btn" onClick={handleClose}>
+              Cancel ❌
+            </button>
             <button className="save-btn" onClick={handleSubmit} disabled={isFormInvalid}>
               Save ✅
             </button>

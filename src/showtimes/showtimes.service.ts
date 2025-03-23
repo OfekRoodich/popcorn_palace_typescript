@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Showtime } from './showtime.entity';
 import { Theater } from '../theaters/theater.entity';
-
+import { Movie } from '../movies/movie.entity';
 
 @Injectable()
 export class ShowtimesService {
@@ -12,143 +12,122 @@ export class ShowtimesService {
     private readonly showtimeRepository: Repository<Showtime>,
 
     @InjectRepository(Theater)
-  private readonly theaterRepository: Repository<Theater>,
+    private readonly theaterRepository: Repository<Theater>,
+
+    @InjectRepository(Movie)
+    private readonly movieRepository: Repository<Movie>,
   ) {}
 
   async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find({
-      relations: ['movie', 'theater'], 
-    });
+    return this.showtimeRepository.find({ relations: ['movie', 'theater'] });
   }
-  
 
   async findById(id: number): Promise<Showtime> {
     return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
   }
 
-  async create(data: Partial<Showtime>): Promise<Showtime> {
-    const theater = await this.theaterRepository.findOne({ where: { id: (data as any).theaterId } });
-  
-    if (!theater) {
-      throw new Error("Theater not found");
-    }
-  
-    const rows = theater.numberOfRows;
-    const cols = theater.numberOfColumns;
-  
-    const seatMatrix = Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => 0)
-    );
-  
-    const showtime = this.showtimeRepository.create({
-      movie: { id: data.movieId },
-      theater: { id: (data as any).theaterId },
-      startTime: data.startTime,
-      price: data.price,
-      seatMatrix,
-      bookedCount: 0
-    });
-  
-    const savedShowtime = await this.showtimeRepository.save(showtime);
-  
-    return this.showtimeRepository.findOne({
-      where: { id: savedShowtime.id },
-      relations: ['movie', 'theater'],
-    });
-  }
-  
-  
   async findAllForTheater(theaterId: number): Promise<Showtime[]> {
-  
     return this.showtimeRepository
-      .createQueryBuilder("showtime")
-      .leftJoinAndSelect("showtime.movie", "movie")
-      .leftJoinAndSelect("showtime.theater", "theater")
-      .where("theater.id = :theaterId", { theaterId })
+      .createQueryBuilder('showtime')
+      .leftJoinAndSelect('showtime.movie', 'movie')
+      .leftJoinAndSelect('showtime.theater', 'theater')
+      .where('theater.id = :theaterId', { theaterId })
       .getMany();
   }
-  
-  
-  async updateSeatMatrix(id: number, selectedSeats: [number, number][]): Promise<Showtime> {
-    console.log(selectedSeats)
 
-    const showtime = await this.showtimeRepository.findOne({ where: { id } });
-  
-    if (!showtime) throw new NotFoundException(`Showtime ${id} not found`);
-  
-    const seatMatrix = showtime.seatMatrix;
-  
-    for (const [row, col] of selectedSeats) {
-      if (seatMatrix[row][col] === 2) {
-        throw new BadRequestException(
-          `⚠️ Seat ${col + 1} on row ${row + 1} is already booked. Refresh and try again.`
-        );
-      }
-      seatMatrix[row][col] = 2; // Mark seat as booked
-    }
-  
-    await this.showtimeRepository.update(id, {
+  async create(data: Partial<Showtime>): Promise<Showtime> {
+    const theater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
+    const movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
+
+    if (!theater) throw new Error('Theater not found');
+    if (!movie) throw new Error('Movie not found');
+
+    const rows = theater.numberOfRows;
+    const cols = theater.numberOfColumns;
+    const seatMatrix = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+    const startTime = new Date(data.startTime);
+    const endTime = new Date(startTime.getTime() + movie.duration * 60000);
+
+    const showtime = this.showtimeRepository.create({
+      movie: { id: data.movieId },
+      theater: { id: data.theaterId },
+      startTime,
+      endTime,
+      price: data.price,
       seatMatrix,
-      bookedCount: seatMatrix.flat().filter(seat => seat === 2).length,
+      bookedCount: 0,
     });
-  
-    return this.showtimeRepository.findOne({
-      where: { id },
-      relations: ['movie', 'theater'],
-    });
+
+    const saved = await this.showtimeRepository.save(showtime);
+    return this.findById(saved.id);
   }
-  
-  
+
   async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
-    const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater'] });
-    if (!existing) throw new NotFoundException(`Showtime with ID ${id} not found`);
-  
+    const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater', 'movie'] });
+    if (!existing) throw new Error(`Showtime with ID ${id} not found`);
+
     const updateData: any = {
       startTime: data.startTime,
       price: data.price,
     };
-  
+
     let recreateMatrix = false;
-    let rows = 0;
-    let cols = 0;
-  
-    // 👇 Check if theaterId changed
-    if ((data as any).theaterId && (data as any).theaterId !== existing.theater.id) {
+
+    if (data.theaterId && data.theaterId !== existing.theater.id) {
       if (existing.bookedCount > 0) {
-        throw new BadRequestException("⚠️ Cannot change theater for a showtime with booked tickets.");
+        throw new Error('⚠️ Cannot change theater for a showtime with booked tickets.');
       }
-  
-      const newTheater = await this.theaterRepository.findOne({ where: { id: (data as any).theaterId } });
-      if (!newTheater) throw new NotFoundException(`Theater with ID ${(data as any).theaterId} not found`);
-  
-      rows = newTheater.numberOfRows;
-      cols = newTheater.numberOfColumns;
-      recreateMatrix = true;
-      updateData.theater = { id: (data as any).theaterId };
-    }
-  
-    if (data.movieId) {
-      updateData.movie = { id: data.movieId };
-    }
-  
-    // 👇 Only allow matrix recreation if no seats are booked
-    if (recreateMatrix) {
-      updateData.seatMatrix = Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () => 0)
+
+      const newTheater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
+      if (!newTheater) throw new Error(`Theater with ID ${data.theaterId} not found`);
+
+      updateData.theater = { id: data.theaterId };
+      updateData.seatMatrix = Array.from({ length: newTheater.numberOfRows }, () =>
+        Array(newTheater.numberOfColumns).fill(0)
       );
       updateData.bookedCount = 0;
     }
-  
+
+    let movie = existing.movie;
+
+    if (data.movieId && data.movieId !== existing.movie.id) {
+      movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
+      if (!movie) throw new Error(`Movie with ID ${data.movieId} not found`);
+      updateData.movie = { id: data.movieId };
+    }
+
+    if (data.startTime && movie?.duration) {
+      const start = new Date(data.startTime);
+      updateData.endTime = new Date(start.getTime() + movie.duration * 60000);
+    }
+
     await this.showtimeRepository.update(id, updateData);
-  
-    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
-  }
-  
-  
-
-  async delete(id: number): Promise<any> {
-    return this.showtimeRepository.delete(id);
+    return this.findById(id);
   }
 
+  async updateSeatMatrix(id: number, selectedSeats: [number, number][]): Promise<Showtime> {
+    console.log(selectedSeats)
+    const showtime = await this.showtimeRepository.findOne({ where: { id } });
+    if (!showtime) throw new Error(`Showtime ${id} not found`);
 
+    const seatMatrix = showtime.seatMatrix;
+    for (const [row, col] of selectedSeats) {
+      if (seatMatrix[row][col] === 2) {
+        throw new Error(`⚠️ Seat ${col + 1} on row ${row + 1} is already booked.`);
+      }
+      seatMatrix[row][col] = 2;
+    }
+
+    await this.showtimeRepository.update(id, {
+      seatMatrix,
+      bookedCount: seatMatrix.flat().filter(s => s === 2).length,
+    });
+
+    return this.findById(id);
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.showtimeRepository.delete(id);
+  }
 }

@@ -8,6 +8,8 @@ import { TheatersModule } from './theaters/theaters.module';
 import { Theater } from './theaters/theater.entity';
 import { Showtime } from './showtimes/showtime.entity';
 import { Movie } from './movies/movie.entity';
+import { BookingsModule } from './bookings/bookings.module';
+
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { Movie } from './movies/movie.entity';
     MoviesModule,
     ShowtimesModule,
     TheatersModule,
+    BookingsModule
   ],
   controllers: [AppController],
   providers: [AppService],
