@@ -7,8 +7,14 @@ export class Showtime {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('decimal')
+  @Column('decimal', {
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   price: number;
+  
 
   @Column()
   movieId: number;

@@ -89,7 +89,7 @@ export class MoviesController {
     if (!existing) throw new NotFoundException(`Movie "${title}" not found`);
 
     await this.moviesService.update(existing.id, movie);
-    return { message: `Movie "${title}" updated successfully` };
+    return movie;
   }
 
   @Delete(':title')
@@ -98,7 +98,6 @@ export class MoviesController {
     if (!existing) throw new NotFoundException(`Movie "${title}" not found`);
 
     await this.moviesService.delete(existing.id);
-    return { message: `Movie "${title}" deleted successfully` };
   }
 
   @Get(':id')
