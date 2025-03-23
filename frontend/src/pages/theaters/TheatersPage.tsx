@@ -130,7 +130,6 @@ const TheatersPage: React.FC = () => {
         <AddTheaterModal show={showModal} handleClose={() => {setShowModal(false);setAddError("");}} handleSave={handleAddTheater} errorMessage={addError}/>
         <EditTheaterModal show={showEditModal} handleClose={() =>{ setShowEditModal(false); setEditError("")}} handleUpdate={handleUpdateTheater} theater={selectedTheater} errorMessage={editError} />
 
-        {/* ✅ Confirm Modal Component */}
         <ConfirmModal
           show={confirmModalVisible}
           message={

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Showtime } from './showtime.entity';
@@ -69,39 +69,43 @@ export class ShowtimesService {
   }
   
   
-  async update(id: number, data: Partial<Showtime>): Promise<any> {
-    const updateData: any = {
-      startTime: data.startTime,
-      price: data.price,
-    };
+  async updateSeatMatrix(id: number, seatMatrix: number[][]): Promise<Showtime> {
+    const showtime = await this.showtimeRepository.findOne({ where: { id } });
   
-    if (data.movieId) {
-      updateData.movie = { id: data.movieId };
+    if (!showtime) throw new NotFoundException(`Showtime ${id} not found`);
+  
+    const currentSeats = showtime.seatMatrix;
+    console.log("old seats:",seatMatrix)
+    console.log("new seats:",currentSeats)
+    for (let row = 0; row < seatMatrix.length; row++) {
+      for (let col = 0; col < seatMatrix[row].length; col++) {
+        const newSeat = seatMatrix[row][col];
+        const oldSeat = currentSeats[row][col];
+        
+        if (newSeat == 3 && oldSeat == 2) {
+          throw new BadRequestException(`⚠️ Seat ${col + 1} on row ${row + 1} is already booked. Refresh your page and book again`);
+        }
+        if (newSeat == 3 && oldSeat == 0)
+            seatMatrix[row][col]=2;
+      }
     }
   
-    if ((data as any).theaterId) {
-      updateData.theater = { id: (data as any).theaterId };
-    }
+    await this.showtimeRepository.update(id, {
+      seatMatrix,
+      bookedCount: seatMatrix.flat().filter(seat => seat === 2).length,
+    });
   
-    return this.showtimeRepository.update(id, updateData);
+    return this.showtimeRepository.findOne({
+      where: { id },
+      relations: ['movie', 'theater'],
+    });
   }
+  
   
 
   async delete(id: number): Promise<any> {
     return this.showtimeRepository.delete(id);
   }
 
-  async updateSeatMatrix(id: number, seatMatrix: number[][]): Promise<Showtime> {
-    await this.showtimeRepository.update(id, {
-      seatMatrix,
-      bookedCount: seatMatrix.flat().filter(seat => seat === 2).length
-    });
-  
-    return this.showtimeRepository.findOne({
-      where: { id },
-      relations: ['movie', 'theater']
-    });
-  }
-  
 
 }

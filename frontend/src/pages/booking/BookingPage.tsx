@@ -12,6 +12,7 @@ const BookingPage: React.FC = () => {
   const [showtime, setShowtime] = useState<any>(null);
   const [seatMatrix, setSeatMatrix] = useState<number[][]>([]);
   const [showSuccess, setShowSuccess] = useState(false); // ✅ success alert
+  const [errorMessage,setBookingError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,7 +45,7 @@ const BookingPage: React.FC = () => {
 
   const handleOrder = () => {
     const updatedMatrix = seatMatrix.map(row =>
-      row.map(seat => (seat === 1 ? 2 : seat))
+      row.map(seat => (seat === 1 ? 3 : seat))
     );
 
     setSeatMatrix(updatedMatrix);
@@ -53,13 +54,16 @@ const BookingPage: React.FC = () => {
       seatMatrix: updatedMatrix
     })
     .then(() => {
-      setShowSuccess(true); // ✅ show success alert
+      setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         handleBack();
       }, 2500);
     })
-    .catch(err => console.error("Booking failed:", err));
+    .catch((error) => {
+      const message = error.response?.data?.message || "❌ Failed to edit showtime.";
+      setBookingError(message);
+    });
   };
 
   const handleBack = () => {
@@ -73,6 +77,7 @@ const BookingPage: React.FC = () => {
       <div className="booking-back-btn-container">
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
       </div>
+      {errorMessage && (<div className="alert alert-danger mt-3" role="alert">{errorMessage}</div>)}
 
       {showSuccess && (
         <div className="alert alert-success alert-dismissible fade show mt-3" role="alert">
