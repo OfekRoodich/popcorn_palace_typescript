@@ -5,10 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  Query,
   BadRequestException,
   NotFoundException,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
 import { MoviesService } from '../movies/movies.service';
@@ -56,7 +54,7 @@ export class ShowtimesController {
 
   private validateShowtime(showtime: Partial<Showtime>) {
     if (showtime.movieId === undefined || showtime.movieId === null)
-      throw new BadRequestException('Mmovie Id is missing or empty');
+      throw new BadRequestException('Movie Id is missing or empty');
     if (!showtime.theater || !showtime.theater.trim())
       throw new BadRequestException('Theater name is missing or empty');
     if (showtime.price === undefined || showtime.price === null)

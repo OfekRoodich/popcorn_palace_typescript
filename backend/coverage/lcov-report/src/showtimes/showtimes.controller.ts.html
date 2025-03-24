@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">92.3% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>46/46</span>
+                <span class='fraction'>48/52</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/13</span>
+                <span class='fraction'>16/20</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">91.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/42</span>
+                <span class='fraction'>44/48</span>
             </div>
         
             
@@ -147,9 +147,12 @@
 <a name='L82'></a><a href='#L82'>82</a>
 <a name='L83'></a><a href='#L83'>83</a>
 <a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -205,27 +208,34 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -238,10 +248,8 @@
   Body,
   Param,
   Delete,
-  Query,
   BadRequestException,
   NotFoundException,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
 import { MoviesService } from '../movies/movies.service';
@@ -256,8 +264,8 @@ export class ShowtimesController {
 &nbsp;
 &nbsp;
   @Get(':id')
-  findById(@Param('id') id: number): Promise&lt;Showtime&gt; {
-    return this.showtimesService.findById(id);
+  getShowtimeById(@Param('id') id: number): Promise&lt;Showtime&gt; {
+    return this.showtimesService.getShowtimeById(id);
   }
 &nbsp;
   @Post()
@@ -288,18 +296,25 @@ export class ShowtimesController {
   }
 &nbsp;
   private validateShowtime(showtime: Partial&lt;Showtime&gt;) {
-    if (isNaN(Number(showtime.movieId)))
-      throw new BadRequestException('Movie must be selected');
-    if (!showtime.theater || typeof showtime.theater !== 'string')
-      throw new BadRequestException(' Theater name is required');
-    if (!showtime.price)
-      throw new BadRequestException("Showtime price can't be empty or 0");
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (showtime.movieId === undefined || showtime.movieId === null)
+<span class="cstat-no" title="statement not covered" >      throw new BadRequestException('Movie Id is missing or empty');</span>
+    if (!showtime.theater || !showtime.theater.trim())
+      throw new BadRequestException('Theater name is missing or empty');
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (showtime.price === undefined || showtime.price === null)
+<span class="cstat-no" title="statement not covered" >      throw new BadRequestException("Price is missing or empty");</span>
     if (!showtime.startTime)
       throw new BadRequestException('Start time must be selected');
-&nbsp;
     const startTime = new Date(showtime.startTime);
     if (isNaN(startTime.getTime()))
-      throw new BadRequestException('startTime is not a valid date');
+      throw new BadRequestException('Start Timeis missing or empty');
+&nbsp;
+    if (typeof showtime.movieId !== 'number')
+      throw new BadRequestException("Movie Id must be a number");
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof showtime.price !== 'number')
+<span class="cstat-no" title="statement not covered" >      throw new BadRequestException("Showtime Price must be a number");</span>
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof showtime.theater !== 'string')
+<span class="cstat-no" title="statement not covered" >      throw new BadRequestException("Theater must be a string");</span>
+&nbsp;
 &nbsp;
     const currentDate = new Date();
     const year1900 = new Date('1900-01-01');
@@ -308,10 +323,10 @@ export class ShowtimesController {
     if (startTime &lt; currentDate)
       throw new BadRequestException('startTime must be in the future');
 &nbsp;
-    if (Number(showtime.price) &lt;= 0)
+    if (showtime.price &lt;= 0)
       throw new BadRequestException('Showtime price must be greater than 0');
 &nbsp;
-    if (Number(showtime.movieId) &lt;= 0)
+    if (showtime.movieId &lt;= 0)
       throw new BadRequestException('Movie ID must be a positive integer');
   }
 }
@@ -322,7 +337,7 @@ export class ShowtimesController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-03-24T17:38:16.491Z
+                at 2025-03-24T18:38:06.842Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -214,13 +214,13 @@ async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
     const query = this.showtimeRepository
       .createQueryBuilder('showtime')
       .where('showtime.theater = :theater', { theater })
-      .andWhere('showtime.startTime < :endTime AND showtime.endTime > :startTime', {
+      .andWhere('showtime.startTime < :endTime AND showtime.endTime > :startTime', { 
         startTime,
         endTime,
       });
 
     if (myId) {
-      query.andWhere('showtime.id != :excludeId', { excludeId: myId });
+      query.andWhere('showtime.id != :CheckedShowtimeIdToExclude', { CheckedShowtimeIdToExclude: myId });
     }
 
     const count = await query.getCount();

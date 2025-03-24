@@ -10,6 +10,7 @@ describe('ShowtimesController', () => {
   let moviesService: MoviesService;
 
   const mockShowtimesService = {
+    getShowtimeById: jest.fn(),
     findById: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -24,7 +25,7 @@ describe('ShowtimesController', () => {
     movieId: 1,
     theater: 'Cinema 1',
     price: 15,
-    startTime: new Date(Date.now() + 3600000), // 1 hour from now
+    startTime: new Date(Date.now() + 3600000), // One hour from this moment
   };
 
   beforeEach(async () => {
@@ -45,13 +46,16 @@ describe('ShowtimesController', () => {
     jest.clearAllMocks();
   });
 
-  it('should call findById()', async () => {
+
+  it('should call getShowtimeById()', async () => {
     const showtime = { id: 1 };
-    mockShowtimesService.findById.mockResolvedValue(showtime);
+    mockShowtimesService.getShowtimeById.mockResolvedValue(showtime);
     const result = await controller.getShowtimeById(1);
     expect(result).toEqual(showtime);
-    expect(showtimesService.findById).toHaveBeenCalledWith(1);
+    expect(mockShowtimesService.getShowtimeById).toHaveBeenCalledWith(1);
   });
+
+  
 
   it('should create a valid showtime', async () => {
     mockMoviesService.findOne.mockResolvedValue({ id: 1 });
@@ -96,9 +100,8 @@ describe('ShowtimesController', () => {
     expect(showtimesService.delete).toHaveBeenCalledWith(1);
   });
 
-  // VALIDATION TESTS
   it('should throw if movieId is NaN', () => {
-    const bad = { ...validShowtime, movieId: 'abc' } as any;
+    const bad = { ...validShowtime, movieId: 'id' } as any;
     expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });
 
@@ -138,7 +141,7 @@ describe('ShowtimesController', () => {
     expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });
 
-  it('should throw if movieId <= 0', () => {
+  it('should throw if movieId is 0 or negative', () => {
     const bad = { ...validShowtime, movieId: 0 };
     expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });

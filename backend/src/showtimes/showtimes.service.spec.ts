@@ -113,7 +113,7 @@ describe('ShowtimesService', () => {
     await expect(service.update(999, validShowtime)).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw if movieId during update is invalid', async () => {
+  it('should throw if movie Id during update is invalid', async () => {
     showtimeRepo.findOne.mockResolvedValue({
       id: 1,
       movie: mockMovie,

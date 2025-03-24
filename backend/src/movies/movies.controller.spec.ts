@@ -38,7 +38,7 @@ describe('MoviesController', () => {
     service = module.get(MoviesService);
   });
 
-  it('should be defined', () => {
+  it('controller should be defined', () => {
     expect(controller).toBeDefined();
   });
 
@@ -62,11 +62,11 @@ describe('MoviesController', () => {
     await expect(controller.create({ title: 'Title' } as any)).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for missing duration on create', async () => {
+  it('should throw for missing movie duration on create', async () => {
     await expect(controller.create({ title: 'Title', genre: 'Drama' } as any)).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for missing rating on create', async () => {
+  it('should throw for missing movie rating on create', async () => {
     await expect(controller.create({ ...mockMovie, rating: undefined })).rejects.toThrow(BadRequestException);
   });
 
@@ -74,35 +74,35 @@ describe('MoviesController', () => {
     await expect(controller.create({ ...mockMovie, releaseYear: undefined })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for non-number duration', async () => {
+  it('should throw for non-numeric duration', async () => {
     await expect(controller.create({ ...mockMovie, duration: 'abc' as any })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for non-number rating', async () => {
+  it('should throw for non-numeric rating', async () => {
     await expect(controller.create({ ...mockMovie, rating: 'high' as any })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for non-number releaseYear', async () => {
+  it('should throw for non-numeric releaseYear', async () => {
     await expect(controller.create({ ...mockMovie, releaseYear: 'future' as any })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for negative duration', async () => {
+  it('should throw for negative movie duration', async () => {
     await expect(controller.create({ ...mockMovie, duration: -10 })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for rating over 10', async () => {
+  it('should throw for movie rating over 10', async () => {
     await expect(controller.create({ ...mockMovie, rating: 11 })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for rating below 0', async () => {
+  it('should throw for movie rating below 0', async () => {
     await expect(controller.create({ ...mockMovie, rating: -1 })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for release year too old', async () => {
+  it('should throw for release year too old (Before 1900)', async () => {
     await expect(controller.create({ ...mockMovie, releaseYear: 1800 })).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw for release year in the future', async () => {
+  it('should throw for release year in the future (Later than current year)', async () => {
     const futureYear = new Date().getFullYear() + 1;
     await expect(controller.create({ ...mockMovie, releaseYear: futureYear })).rejects.toThrow(BadRequestException);
   });

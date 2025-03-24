@@ -173,7 +173,7 @@ let ShowtimesService = class ShowtimesService {
             endTime,
         });
         if (myId) {
-            query.andWhere('showtime.id != :excludeId', { excludeId: myId });
+            query.andWhere('showtime.id != :CheckedShowtimeIdToExclude', { CheckedShowtimeIdToExclude: myId });
         }
         const count = await query.getCount();
         return count > 0;

@@ -26,7 +26,7 @@ export class MoviesService {
     this.validateMovie(movie);
   
     const existing = await this.findByTitle(movie.title);
-    if (existing) {
+    if (existing) { //checking if there is already existing movie with this title
       throw new BadRequestException(`A movie with the title "${movie.title}" already exists.`);
     }
   
@@ -39,7 +39,7 @@ export class MoviesService {
   
     if (movie.title) {
       const existing = await this.findByTitle(movie.title);
-      if (existing && existing.id !== id) {
+      if (existing && existing.id !== id) { //checking if there is already existing movie with this title
         throw new BadRequestException(`A movie with the title "${movie.title}" already exists.`);
       }
     }
@@ -55,13 +55,10 @@ export class MoviesService {
   private validateMovie(movie: Partial<Movie>) {
     const { title, duration, rating, releaseYear } = movie;
 
-    if (typeof duration !== 'number' ||!title || title.trim() === '')
-      throw new BadRequestException('Title cannot be empty.');
-
-    if (typeof duration !== 'number' || duration <= 0)
+    if (duration <= 0)
       throw new BadRequestException('Duration must be a positive number.');
 
-    if (typeof rating !== 'number' || rating < 0 || rating > 10)
+    if (rating < 0 || rating > 10)
       throw new BadRequestException('Rating must be between 0 and 10.');
 
     const currentYear = new Date().getFullYear();

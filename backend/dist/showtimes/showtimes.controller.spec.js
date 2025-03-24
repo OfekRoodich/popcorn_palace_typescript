@@ -10,6 +10,7 @@ describe('ShowtimesController', () => {
     let showtimesService;
     let moviesService;
     const mockShowtimesService = {
+        getShowtimeById: jest.fn(),
         findById: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
