@@ -7,7 +7,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/booking/BookingPage.css";
 import "../../styles/general/GeneralPage.css";
 
-
 const BookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [showtime, setShowtime] = useState<any>(null);
@@ -53,33 +52,36 @@ const BookingPage: React.FC = () => {
       });
     });
 
-    axios.put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${id}/seats`, {
-      selectedSeats,
-    })
-    .then(() => {
-      const bookingCalls = selectedSeats.map(([row, col]) => {
-        const seatID = row * showtime.theater.numberOfColumns + col;
-        console.log(seatID)
-        return axios.post(`${process.env.REACT_APP_API_BASE_URL}/bookings`, {
-          showtimeId: showtime.id,
-          seatNumber: seatID,
-          userId: uuidv4(), 
-        });
+    // ❌ Commented out: update seatMatrix manually
+    // axios.put(`${process.env.REACT_APP_API_BASE_URL}/showtimes/${id}/seats`, {
+    //   selectedSeats,
+    // })
+    // .then(() => {
+
+    const bookingCalls = selectedSeats.map(([row, col]) => {
+      const seatID = row * showtime.theater.numberOfColumns + col;
+      console.log(seatID);
+      return axios.post(`${process.env.REACT_APP_API_BASE_URL}/bookings`, {
+        showtimeId: showtime.id,
+        seatNumber: seatID,
+        userId: uuidv4(),
+      });
+    });
+
+    Promise.all(bookingCalls)
+      .then(() => {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          handleBack();
+        }, 1000);
+      })
+      .catch((error) => {
+        const message = error.response?.data?.message || "❌ Failed to book seats.";
+        setBookingError(message);
       });
 
-      return Promise.all(bookingCalls);
-    })
-    .then(() => {
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        handleBack();
-      }, 1000);
-    })
-    .catch((error) => {
-      const message = error.response?.data?.message || "❌ Failed to book seats.";
-      setBookingError(message);
-    });
+    // });
   };
 
   const handleBack = () => {
@@ -93,7 +95,9 @@ const BookingPage: React.FC = () => {
       <div className="booking-back-btn-container">
         <button className="menu-btn" onClick={handleBack}>Back ➡️</button>
       </div>
-      {errorMessage && (<div className="alert alert-danger mt-3" role="alert">{errorMessage}</div>)}
+      {errorMessage && (
+        <div className="alert alert-danger mt-3" role="alert">{errorMessage}</div>
+      )}
 
       {showSuccess && (
         <div className="alert alert-success alert-dismissible fade show mt-3" role="alert">
