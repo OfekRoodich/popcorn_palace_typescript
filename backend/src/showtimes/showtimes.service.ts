@@ -1,8 +1,7 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Showtime } from './showtime.entity';
-import { Theater } from '../theaters/theater.entity';
 import { Movie } from '../movies/movie.entity';
 
 @Injectable()
@@ -11,159 +10,221 @@ export class ShowtimesService {
     @InjectRepository(Showtime)
     private readonly showtimeRepository: Repository<Showtime>,
 
-    @InjectRepository(Theater)
-    private readonly theaterRepository: Repository<Theater>,
-
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
   ) {}
 
   async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find({ relations: ['movie', 'theater'] });
+    return this.showtimeRepository.find({ relations: ['movie'] });
   }
 
   async findById(id: number): Promise<Showtime> {
-    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie', 'theater'] });
+    return this.showtimeRepository.findOne({ where: { id }, relations: ['movie'] });
   }
 
-  async findAllForTheater(theaterId: number): Promise<Showtime[]> {
-    return this.showtimeRepository
-      .createQueryBuilder('showtime')
-      .leftJoinAndSelect('showtime.movie', 'movie')
-      .leftJoinAndSelect('showtime.theater', 'theater')
-      .where('theater.id = :theaterId', { theaterId })
-      .getMany();
-  }
-
-  async create(data: Partial<Showtime>): Promise<Showtime> {
-    const theater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
-    const movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
-
-    if (!theater) throw new Error('Theater not found');
-    if (!movie) throw new Error('Movie not found');
-
-    const rows = theater.numberOfRows;
-    const cols = theater.numberOfColumns;
-    const seatMatrix = Array.from({ length: rows }, () => Array(cols).fill(0));
-
-    const startTime = new Date(data.startTime);
-    const endTime = new Date(startTime.getTime() + movie.duration * 60000);
-
-    const isOverlap = await this.hasOverlap(theater.id, startTime, endTime);
-    if (isOverlap) {
-      throw new BadRequestException('⚠️ This theater already has a movie scheduled at that time');
-    }
-
-    const showtime = this.showtimeRepository.create({
-      movie: { id: data.movieId },
-      theater: { id: data.theaterId },
-      startTime,
-      endTime,
-      price: data.price,
-      seatMatrix,
-      bookedCount: 0,
-    });
-
-    const saved = await this.showtimeRepository.save(showtime);
-    return this.findById(saved.id);
-  }
-
-  async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
-    const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater', 'movie'] });
-    if (!existing) throw new Error(`Showtime with ID ${id} not found`);
-  
-    const updateData: any = {
-      startTime: data.startTime,
-      price: data.price,
-    };
-  
-    let recreateMatrix = false;
-    let targetTheater = existing.theater;
-  
-    if (data.theaterId && data.theaterId !== existing.theater.id) {
-      if (existing.bookedCount > 0) {
-        throw new Error('⚠️ Cannot change theater for a showtime with booked tickets.');
-      }
-  
-      targetTheater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
-      if (!targetTheater) throw new Error(`Theater with ID ${data.theaterId} not found`);
-  
-      updateData.theater = { id: data.theaterId };
-      updateData.seatMatrix = Array.from({ length: targetTheater.numberOfRows }, () =>
-        Array(targetTheater.numberOfColumns).fill(0)
-      );
-      updateData.bookedCount = 0;
-      recreateMatrix = true;
-    }
-  
-    let movie = existing.movie;
-  
-    if (data.movieId && data.movieId !== existing.movie.id) {
-      movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
-      if (!movie) throw new Error(`Movie with ID ${data.movieId} not found`);
-      updateData.movie = { id: data.movieId };
-    }
-  
-    if (data.startTime && movie?.duration) {
-      const start = new Date(data.startTime);
-      const end = new Date(start.getTime() + movie.duration * 60000);
-  
-      const overlap = await this.hasOverlap(targetTheater.id, start, end, existing.id);
-      if (overlap) {
-        throw new BadRequestException('⚠️ This theater already has a movie scheduled at that time');
-      }
-  
-      updateData.endTime = end;
-    }
-  
-    await this.showtimeRepository.update(id, updateData);
-    return this.findById(id);
-  }
-  
-
-  async updateSeatMatrix(id: number, selectedSeats: [number, number][]): Promise<Showtime> {
+  async getShowtimeById(id: number): Promise<any> {
     const showtime = await this.showtimeRepository.findOne({ where: { id } });
-    if (!showtime) throw new Error(`Showtime ${id} not found`);
+    if (!showtime) {
+      throw new NotFoundException(`Showtime with id ${id} not found`);
+    }
+  
+    return {
+      id: showtime.id,
+      price: showtime.price,
+      movieId: showtime.movieId,
+      theater: showtime.theater,
+      startTime: showtime.startTime,
+      endTime: showtime.endTime,
+    };
+  }
 
-    const seatMatrix = showtime.seatMatrix;
-    for (const [row, col] of selectedSeats) {
-      if (seatMatrix[row][col] === 2) {
-        throw new Error(`⚠️ Seat ${col + 1} on row ${row + 1} is already booked.`);
-      }
-      seatMatrix[row][col] = 2;
+  async findAllForTheater(theater: string): Promise<Showtime[]> {
+    return this.showtimeRepository.find({
+      where: { theater },
+      relations: ['movie'],
+    });
+  }
+
+async create(data: Partial<Showtime>): Promise<Partial<Showtime>> {
+  // 🎯 Validation
+  if (!data.theater || typeof data.theater !== 'string' || !data.theater.trim()) {
+    throw new BadRequestException('Theater name must be a non-empty string');
+  }
+
+  if (Number(data.price) <= 0) {
+    throw new BadRequestException('Showtime price must be greater than 0');
+  }
+
+  if (!data.movieId || typeof data.movieId !== 'number' || data.movieId <= 0) {
+    throw new BadRequestException('Movie ID must be a positive integer');
+  }
+
+  const parsedStartTime = new Date(data.startTime);
+  if (isNaN(parsedStartTime.getTime())) {
+    throw new BadRequestException('startTime must be a valid date');
+  }
+
+  const year1900 = new Date('1900-01-01');
+  const now = new Date();
+
+  if (parsedStartTime < year1900) {
+    throw new BadRequestException('startTime cannot be before the year 1900');
+  }
+
+  if (parsedStartTime <= now) {
+    throw new BadRequestException('startTime must be in the future');
+  }
+
+  // 🎬 Movie existence check
+  const movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
+  if (!movie) {
+    throw new BadRequestException(`Movie with ID ${data.movieId} not found`);
+  }
+
+  // ⏰ Determine endTime
+  const parsedEndTime = data.endTime ? new Date(data.endTime) : new Date(parsedStartTime.getTime() + movie.duration * 60000);
+  if (isNaN(parsedEndTime.getTime())) {
+    throw new BadRequestException('endTime must be a valid date');
+  }
+
+  if (parsedEndTime <= parsedStartTime) {
+    throw new BadRequestException('endTime must be later than startTime');
+  }
+
+  // 🚫 Check for overlapping showtimes
+  const isOverlap = await this.hasOverlap(data.theater, parsedStartTime, parsedEndTime);
+  if (isOverlap) {
+    throw new BadRequestException('This theater already has a movie scheduled at that time');
+  }
+
+  // ✅ Create and save
+  const showtime = this.showtimeRepository.create({
+    movie: { id: data.movieId },
+    theater: data.theater,
+    startTime: parsedStartTime,
+    endTime: parsedEndTime,
+    price: data.price,
+  });
+
+  const saved = await this.showtimeRepository.save(showtime);
+
+  return {
+    id: saved.id,
+    price: saved.price,
+    movieId: data.movieId,
+    theater: saved.theater,
+    startTime: saved.startTime,
+    endTime: saved.endTime,
+  };
+}
+
+async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
+  const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['movie'] });
+  if (!existing) {
+    throw new BadRequestException(`Showtime with ID ${id} not found`);
+  }
+
+  const updateData: any = {};
+
+  // Validate theater (if provided)
+  const theater = data.theater ?? existing.theater;
+  if (data.theater !== undefined && (!data.theater.trim() || typeof data.theater !== 'string')) {
+    throw new BadRequestException('Theater name must be a non-empty string');
+  }
+
+  // Validate price (if provided)
+  if (data.price !== undefined && Number(data.price) <= 0) {
+    throw new BadRequestException('Showtime price must be greater than 0');
+  }
+
+  // Determine movie (check if updated)
+  let movie = existing.movie;
+  if (data.movieId !== undefined && data.movieId !== existing.movie.id) {
+    if (data.movieId <= 0) {
+      throw new BadRequestException('Movie ID must be a positive integer');
     }
 
-    await this.showtimeRepository.update(id, {
-      seatMatrix,
-      bookedCount: seatMatrix.flat().filter(s => s === 2).length,
-    });
+    movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
+    if (!movie) {
+      throw new BadRequestException(`Movie with ID ${data.movieId} not found`);
+    }
 
-    return this.findById(id);
+    updateData.movie = { id: data.movieId };
   }
+
+  // Handle and validate startTime
+  const startTime = data.startTime ? new Date(data.startTime) : existing.startTime;
+  if (data.startTime !== undefined) {
+    if (isNaN(startTime.getTime())) {
+      throw new BadRequestException('startTime must be a valid date');
+    }
+
+    const year1900 = new Date('1900-01-01');
+    const now = new Date();
+
+    if (startTime < year1900) {
+      throw new BadRequestException('startTime cannot be before the year 1900');
+    }
+
+    if (startTime <= now) {
+      throw new BadRequestException('startTime must be in the future');
+    }
+  }
+
+  // Handle and validate endTime
+  const endTime = data.endTime
+    ? new Date(data.endTime)
+    : new Date(startTime.getTime() + movie.duration * 60000);
+
+  if (data.endTime !== undefined && isNaN(endTime.getTime())) {
+    throw new BadRequestException('endTime must be a valid date');
+  }
+
+  if (endTime <= startTime) {
+    throw new BadRequestException('endTime must be later than startTime');
+  }
+
+  // Overlap check
+  const isOverlap = await this.hasOverlap(theater, startTime, endTime, id);
+  if (isOverlap) {
+    throw new BadRequestException('This theater already has a movie scheduled at that time');
+  }
+
+  // Prepare update payload
+  updateData.theater = theater;
+  updateData.price = data.price ?? existing.price;
+  updateData.startTime = startTime;
+  updateData.endTime = endTime;
+
+  await this.showtimeRepository.update(id, updateData);
+  return this.findById(id);
+}
+
 
   async delete(id: number): Promise<void> {
     await this.showtimeRepository.delete(id);
   }
 
   private async hasOverlap(
-    theaterId: number,
+    theater: string,
     startTime: Date,
     endTime: Date,
-    excludeId?: number
+    myId?: number
   ): Promise<boolean> {
     const query = this.showtimeRepository
       .createQueryBuilder('showtime')
-      .where('showtime.theaterId = :theaterId', { theaterId })
+      .where('showtime.theater = :theater', { theater })
       .andWhere('showtime.startTime < :endTime AND showtime.endTime > :startTime', {
         startTime,
         endTime,
       });
 
-    if (excludeId) {
-      query.andWhere('showtime.id != :excludeId', { excludeId });
+    if (myId) {
+      query.andWhere('showtime.id != :excludeId', { excludeId: myId });
     }
 
     const count = await query.getCount();
     return count > 0;
   }
+
 }

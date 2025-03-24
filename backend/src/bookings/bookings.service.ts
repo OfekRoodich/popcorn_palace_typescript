@@ -17,31 +17,25 @@ export class BookingsService {
   async create(data: { showtimeId: number; seatNumber: number; userId: string }) {
     const { showtimeId, seatNumber, userId } = data;
 
+    // ✅ Validate seatNumber is between 1 and 99
+    if (seatNumber < 1 || seatNumber > 99) {
+      throw new BadRequestException('Seat number must be between 1 and 99');
+    }
+
     // 🧠 Fetch the showtime
     const showtime = await this.showtimeRepository.findOne({ where: { id: showtimeId } });
     if (!showtime) throw new BadRequestException(`Showtime ${showtimeId} not found`);
 
-    const rows = showtime.seatMatrix.length;
-    const cols = showtime.seatMatrix[0].length;
+    // ✅ Check if seat already booked in booking table
+    const existingBooking = await this.bookingRepository.findOne({
+      where: { seatNumber, showtimeId },
+    });
 
-    const row = Math.floor(seatNumber / cols);
-    const col = seatNumber % cols;
-
-    if (row >= rows || col >= cols) {
-      throw new BadRequestException(`Invalid seat number: ${seatNumber}`);
+    if (existingBooking) {
+      throw new BadRequestException(`Seat ${seatNumber} is already booked for showtime ${showtimeId}`);
     }
 
-    if (showtime.seatMatrix[row][col] === 2) {
-      throw new BadRequestException(`⚠️ Seat ${col + 1} on row ${row + 1} is already booked.`);
-    }
-
-    // ✅ Mark seat as booked
-    showtime.seatMatrix[row][col] = 2;
-    showtime.bookedCount = showtime.seatMatrix.flat().filter(seat => seat === 2).length;
-
-    await this.showtimeRepository.save(showtime);
-
-    // ✅ Create and save the booking
+    // ✅ Save booking
     const booking = this.bookingRepository.create({ showtimeId, seatNumber, userId });
     const saved = await this.bookingRepository.save(booking);
 

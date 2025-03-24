@@ -11,16 +11,16 @@ export class BookingsController {
   ) {
     const { showtimeId, seatNumber, userId } = body;
 
-    if (!showtimeId || isNaN(showtimeId)) {
-      throw new BadRequestException('⚠️ Invalid or missing showtimeId');
+    if (!showtimeId || typeof showtimeId !== 'number' || isNaN(showtimeId)) {
+      throw new BadRequestException('Invalid or missing showtimeId');
     }
 
-    if (!seatNumber && seatNumber !== 0) {
-      throw new BadRequestException('⚠️ seatNumber is required');
+    if (typeof seatNumber !== 'number' || seatNumber < 1 || seatNumber > 99) {
+      throw new BadRequestException('seatNumber must be a number between 1 and 99');
     }
 
-    if (!userId || typeof userId !== 'string') {
-      throw new BadRequestException('⚠️ userId is required');
+    if (!userId || typeof userId !== 'string' || !userId.trim()) {
+      throw new BadRequestException('userId must be a non-empty string');
     }
 
     return this.bookingsService.create({ showtimeId, seatNumber, userId });

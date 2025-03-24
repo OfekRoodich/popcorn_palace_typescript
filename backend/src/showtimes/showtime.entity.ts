@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Movie } from '../movies/movie.entity';
-import { Theater } from '../theaters/theater.entity';
 
 @Entity()
 export class Showtime {
@@ -24,21 +23,11 @@ export class Showtime {
   movie: Movie;
 
   @Column()
-  theaterId: number;
-
-  @ManyToOne(() => Theater, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'theaterId' })
-  theater: Theater;
+  theater: string;
 
   @Column('timestamp')
   startTime: Date;
 
-  @Column('timestamp') // ✅ NEW
+  @Column('timestamp')
   endTime: Date;
-
-  @Column('int', { array: true, nullable: false })
-  seatMatrix: number[][];
-
-  @Column({ default: 0 })
-  bookedCount: number;
 }

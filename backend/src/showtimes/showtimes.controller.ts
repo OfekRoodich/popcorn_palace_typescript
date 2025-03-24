@@ -11,7 +11,6 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
-import { TheatersService } from '../theaters/theaters.service';
 import { MoviesService } from '../movies/movies.service';
 import { Showtime } from './showtime.entity';
 
@@ -20,34 +19,24 @@ export class ShowtimesController {
   constructor(
     private readonly showtimesService: ShowtimesService,
     private readonly moviesService: MoviesService,
-    private readonly theatersService: TheatersService,
   ) {}
 
-  @Get()
-  findAll(@Query('theaterId') theaterId?: string): Promise<Showtime[]> {
-    if (theaterId) {
-      return this.showtimesService.findAllForTheater(parseInt(theaterId, 10));
-    }
-    return this.showtimesService.findAll();
-  }
 
   @Get(':id')
-  findById(@Param('id') id: number): Promise<Showtime> {
-    return this.showtimesService.findById(id);
+  getShowtimeById(@Param('id') id: number): Promise<Showtime> {
+    return this.showtimesService.getShowtimeById(id);
   }
 
   @Post()
-  async create(@Body() showtime: Partial<Showtime>): Promise<Showtime> {
+  async create(@Body() showtime: Partial<Showtime>): Promise<Partial<Showtime>> {
     this.validateShowtime(showtime);
-
+  
     const movie = await this.moviesService.findOne(showtime.movieId);
     if (!movie) throw new NotFoundException(`Movie with ID ${showtime.movieId} not found`);
-
-    const theater = await this.theatersService.findOne(showtime.theaterId);
-    if (!theater) throw new NotFoundException(`Theater with ID ${showtime.theaterId} not found`);
-
+  
     return this.showtimesService.create(showtime);
   }
+  
 
   @Post('update/:id')
   async update(@Param('id') id: number, @Body() showtime: Partial<Showtime>) {
@@ -56,15 +45,8 @@ export class ShowtimesController {
     const movie = await this.moviesService.findOne(showtime.movieId);
     if (!movie) throw new NotFoundException(`Movie with ID ${showtime.movieId} not found`);
 
-    const theater = await this.theatersService.findOne(showtime.theaterId);
-    if (!theater) throw new NotFoundException(`Theater with ID ${showtime.theaterId} not found`);
-
     const updated = await this.showtimesService.update(id, showtime);
-
-    return {
-      message: `Showtime ${id} updated successfully`,
-      updated,
-    };
+    return { "id": updated.id, "price": updated.price ,"movieId": updated.movie.id, "theater": updated.theater, "startTime": updated.startTime, "endTime": updated.endTime }                                                          
   }
 
   @Delete(':id')
@@ -72,44 +54,38 @@ export class ShowtimesController {
     return this.showtimesService.delete(id);
   }
 
-  @Post(':id/seats')
-  updateSeats(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: { selectedSeats: [number, number][] },
-  ) {
-    // return this.showtimesService.updateSeatMatrix(id, body.selectedSeats);
-  }
-
   private validateShowtime(showtime: Partial<Showtime>) {
-    if (isNaN(Number(showtime.movieId)))
-      throw new BadRequestException('⚠️ Movie must be selected');
-    if (isNaN(Number(showtime.theaterId)))
-      throw new BadRequestException('⚠️ Theater must be selected');
-    if (!showtime.price)
-      throw new BadRequestException("⚠️ Showtime price can't be empty or 0");
+    if (showtime.movieId === undefined || showtime.movieId === null)
+      throw new BadRequestException('Mmovie Id is missing or empty');
+    if (!showtime.theater || !showtime.theater.trim())
+      throw new BadRequestException('Theater name is missing or empty');
+    if (showtime.price === undefined || showtime.price === null)
+      throw new BadRequestException("Price is missing or empty");
     if (!showtime.startTime)
-      throw new BadRequestException('⚠️ Start time must be selected');
-
-    if (isNaN(Number(showtime.price)))
-      throw new BadRequestException('⚠️ Showtime price must be a number');
-
+      throw new BadRequestException('Start time must be selected');
     const startTime = new Date(showtime.startTime);
     if (isNaN(startTime.getTime()))
-      throw new BadRequestException('startTime is not a valid date');
+      throw new BadRequestException('Start Timeis missing or empty');
+
+    if (typeof showtime.movieId !== 'number')
+      throw new BadRequestException("Movie Id must be a number");
+    if (typeof showtime.price !== 'number')
+      throw new BadRequestException("Showtime Price must be a number");
+    if (typeof showtime.theater !== 'string')
+      throw new BadRequestException("Theater must be a string");
+
 
     const currentDate = new Date();
     const year1900 = new Date('1900-01-01');
     if (startTime < year1900)
-      throw new BadRequestException('⚠️ startTime cannot be before the year 1900');
+      throw new BadRequestException('startTime cannot be before the year 1900');
     if (startTime < currentDate)
-      throw new BadRequestException('⚠️ startTime must be in the future');
+      throw new BadRequestException('startTime must be in the future');
 
-    if (Number(showtime.price) <= 0)
-      throw new BadRequestException('⚠️ Showtime price must be greater than 0');
+    if (showtime.price <= 0)
+      throw new BadRequestException('Showtime price must be greater than 0');
 
     if (showtime.movieId <= 0)
-      throw new BadRequestException('⚠️ Movie ID must be a positive integer');
-    if (showtime.theaterId <= 0)
-      throw new BadRequestException('⚠️ Theater ID must be a positive integer');
+      throw new BadRequestException('Movie ID must be a positive integer');
   }
 }

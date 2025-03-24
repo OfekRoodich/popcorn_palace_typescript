@@ -12,12 +12,9 @@ describe('BookingsService', () => {
   let showtimeRepo: jest.Mocked<Repository<Showtime>>;
 
   const mockRepository = () => ({
-    find: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
   });
 
   beforeEach(async () => {
@@ -35,64 +32,56 @@ describe('BookingsService', () => {
   });
 
   it('should book a seat successfully', async () => {
-    const showtime = {
-      id: 1,
-      seatMatrix: [[0, 0], [0, 0]],
-      bookedCount: 0,
-    } as Showtime;
-
-    showtimeRepo.findOne.mockResolvedValue(showtime);
-
-    const mockBooking: Booking = {
-      bookingId: '1',
+    const bookingData = { showtimeId: 5000, seatNumber: 1, userId: 'user123' };
+  
+    bookingRepo.findOne.mockResolvedValue(null);
+    showtimeRepo.findOne.mockResolvedValue({ id: 1 } as Showtime); 
+    bookingRepo.create.mockReturnValue({ bookingId: 'uuid-123', ...bookingData } as Booking);
+    bookingRepo.save.mockResolvedValue({ bookingId: 'uuid-123', ...bookingData } as Booking);
+  
+    const result = await service.create(bookingData);
+  
+    expect(bookingRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+      showtimeId: 5000,
       seatNumber: 1,
-      showtimeId: 1,
       userId: 'user123',
-      showtime: showtime,
-    };
-
-    bookingRepo.create.mockReturnValue(mockBooking);
-    bookingRepo.save.mockResolvedValue(mockBooking);
-    showtimeRepo.save.mockResolvedValue(showtime);
-
-    const result = await service.create({ showtimeId: 1, seatNumber: 1, userId: 'user123' });
-
-    expect(showtimeRepo.save).toHaveBeenCalled();
-    expect(bookingRepo.save).toHaveBeenCalled();
-    expect(result).toEqual({ bookingId: '1' });
+    }));
+    expect(result).toEqual({ bookingId: 'uuid-123' });
   });
+  
 
   it('should throw if showtime not found', async () => {
     showtimeRepo.findOne.mockResolvedValue(null);
 
-    await expect(service.create({ showtimeId: 999, seatNumber: 0, userId: 'user' })).rejects.toThrow(
-      'Showtime 999 not found'
-    );
-  });
-
-  it('should throw for invalid seat number', async () => {
-    const showtime = {
-      id: 1,
-      seatMatrix: [[0, 0], [0, 0]],
-    } as Showtime;
-
-    showtimeRepo.findOne.mockResolvedValue(showtime);
-
-    await expect(service.create({ showtimeId: 1, seatNumber: 10, userId: 'user' })).rejects.toThrow(
-      'Invalid seat number: 10'
-    );
+    await expect(
+      service.create({ showtimeId: 999, seatNumber: 1, userId: 'user' })
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should throw if seat is already booked', async () => {
-    const showtime = {
-      id: 1,
-      seatMatrix: [[2, 0], [0, 0]],
-    } as Showtime;
+    const mockShowtime = { id: 1 } as Showtime;
+  
+    bookingRepo.findOne.mockResolvedValue({
+      bookingId: 'uuid-existing',
+      seatNumber: 1,
+      showtimeId: 1,
+      userId: 'user-existing',
+      showtime: mockShowtime, 
+    });
+  
+    showtimeRepo.findOne.mockResolvedValue(mockShowtime);
+  
+    await expect(
+      service.create({ showtimeId: 1, seatNumber: 1, userId: 'user123' })
+    ).rejects.toThrow(BadRequestException);
+  });
+  
 
-    showtimeRepo.findOne.mockResolvedValue(showtime);
+  it('should throw for invalid seat number (out of range)', async () => {
+    showtimeRepo.findOne.mockResolvedValue({ id: 1 } as Showtime);
 
-    await expect(service.create({ showtimeId: 1, seatNumber: 0, userId: 'user' })).rejects.toThrow(
-      '⚠️ Seat 1 on row 1 is already booked.'
-    );
+    await expect(
+      service.create({ showtimeId: 1, seatNumber: 150, userId: 'user' })
+    ).rejects.toThrow(BadRequestException);
   });
 });

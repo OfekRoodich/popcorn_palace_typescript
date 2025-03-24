@@ -2,177 +2,144 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ShowtimesController } from './showtimes.controller';
 import { ShowtimesService } from './showtimes.service';
 import { MoviesService } from '../movies/movies.service';
-import { TheatersService } from '../theaters/theaters.service';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Showtime } from './showtime.entity';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ShowtimesController', () => {
   let controller: ShowtimesController;
-  let showtimesService: jest.Mocked<ShowtimesService>;
-  let moviesService: jest.Mocked<MoviesService>;
-  let theatersService: jest.Mocked<TheatersService>;
+  let showtimesService: ShowtimesService;
+  let moviesService: MoviesService;
 
-  const mockShowtime: Showtime = {
-    id: 1,
+  const mockShowtimesService = {
+    findById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  const mockMoviesService = {
+    findOne: jest.fn(),
+  };
+
+  const validShowtime = {
     movieId: 1,
-    theaterId: 1,
-    startTime: new Date(Date.now() + 60 * 60000),
-    endTime: new Date(Date.now() + 120 * 60000),
-    seatMatrix: [[0]],
-    price: 20,
-    bookedCount: 0,
-    movie: null,
-    theater: null,
+    theater: 'Cinema 1',
+    price: 15,
+    startTime: new Date(Date.now() + 3600000), // 1 hour from now
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ShowtimesController],
       providers: [
-        {
-          provide: ShowtimesService,
-          useValue: {
-            findAll: jest.fn(),
-            findAllForTheater: jest.fn(),
-            findById: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-            updateSeatMatrix: jest.fn(),
-          },
-        },
-        {
-          provide: MoviesService,
-          useValue: { findOne: jest.fn() },
-        },
-        {
-          provide: TheatersService,
-          useValue: { findOne: jest.fn() },
-        },
+        { provide: ShowtimesService, useValue: mockShowtimesService },
+        { provide: MoviesService, useValue: mockMoviesService },
       ],
     }).compile();
 
     controller = module.get<ShowtimesController>(ShowtimesController);
-    showtimesService = module.get(ShowtimesService);
-    moviesService = module.get(MoviesService);
-    theatersService = module.get(TheatersService);
+    showtimesService = module.get<ShowtimesService>(ShowtimesService);
+    moviesService = module.get<MoviesService>(MoviesService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should return all showtimes', async () => {
-    showtimesService.findAll.mockResolvedValue([mockShowtime]);
-    const result = await controller.findAll();
-    expect(result).toEqual([mockShowtime]);
+  it('should call findById()', async () => {
+    const showtime = { id: 1 };
+    mockShowtimesService.findById.mockResolvedValue(showtime);
+    const result = await controller.getShowtimeById(1);
+    expect(result).toEqual(showtime);
+    expect(showtimesService.findById).toHaveBeenCalledWith(1);
   });
 
-  it('should return showtimes for a specific theater', async () => {
-    showtimesService.findAllForTheater.mockResolvedValue([mockShowtime]);
-    const result = await controller.findAll('1');
-    expect(showtimesService.findAllForTheater).toHaveBeenCalledWith(1);
-    expect(result).toEqual([mockShowtime]);
+  it('should create a valid showtime', async () => {
+    mockMoviesService.findOne.mockResolvedValue({ id: 1 });
+    mockShowtimesService.create.mockResolvedValue({ id: 10 });
+
+    const result = await controller.create(validShowtime);
+    expect(result).toEqual({ id: 10 });
+    expect(moviesService.findOne).toHaveBeenCalledWith(1);
+    expect(showtimesService.create).toHaveBeenCalledWith(validShowtime);
   });
-
-  it('should return a showtime by ID', async () => {
-    showtimesService.findById.mockResolvedValue(mockShowtime);
-    const result = await controller.findById(1);
-    expect(result).toEqual(mockShowtime);
-  });
-
- it('should create a valid showtime', async () => {
-  const body = { ...mockShowtime };
-
-  const mockMovie = {
-    id: 1,
-    title: 'Test Movie',
-    genre: 'Action',
-    duration: 120,
-    rating: 8.5,
-    releaseYear: 2023,
-  };
-
-  const mockTheater = {
-    id: 1,
-    name: 'Main Theater',
-    numberOfRows: 5,
-    numberOfColumns: 5,
-  };
-
-  moviesService.findOne.mockResolvedValue(mockMovie);
-  theatersService.findOne.mockResolvedValue(mockTheater);
-  showtimesService.create.mockResolvedValue(mockShowtime);
-
-  const result = await controller.create(body);
-  expect(result).toEqual(mockShowtime);
-});
-
 
   it('should throw if movie not found on create', async () => {
-    moviesService.findOne.mockResolvedValue(null);
-    await expect(controller.create({ ...mockShowtime })).rejects.toThrow(NotFoundException);
+    mockMoviesService.findOne.mockResolvedValue(null);
+    await expect(controller.create(validShowtime)).rejects.toThrow(NotFoundException);
   });
 
-  it('should throw if theater not found on create', async () => {
-    const mockMovie = {
-      id: 1,
-      title: 'Test Movie',
-      genre: 'Action',
-      duration: 120,
-      rating: 8.5,
-      releaseYear: 2023,
-    };
+  it('should update a valid showtime', async () => {
+    mockMoviesService.findOne.mockResolvedValue({ id: 1 });
+    mockShowtimesService.update.mockResolvedValue({
+      id: 10,
+      price: 15,
+      movie: { id: 1 },
+      theater: 'Cinema 1',
+      startTime: validShowtime.startTime,
+      endTime: new Date(Date.now() + 7200000).toISOString(),
+    });
 
-    moviesService.findOne.mockResolvedValue(mockMovie);
-    theatersService.findOne.mockResolvedValue(null);
-    await expect(controller.create({ ...mockShowtime })).rejects.toThrow(NotFoundException);
+    const result = await controller.update(10, validShowtime);
+
+    expect(result).toHaveProperty('id', 10);
+    expect(showtimesService.update).toHaveBeenCalledWith(10, validShowtime);
   });
 
-  it('should update a showtime', async () => {
-    const updatedShowtime = { ...mockShowtime, price: 25 };
-    const mockMovie = {
-      id: 1,
-      title: 'Test Movie',
-      genre: 'Action',
-      duration: 120,
-      rating: 8.5,
-      releaseYear: 2023,
-    };
-  
-    const mockTheater = {
-      id: 1,
-      name: 'Main Theater',
-      numberOfRows: 5,
-      numberOfColumns: 5,
-    };
-    moviesService.findOne.mockResolvedValue(mockMovie);
-    theatersService.findOne.mockResolvedValue(mockTheater);
-    showtimesService.update.mockResolvedValue(updatedShowtime);
-
-    const result = await controller.update(1, updatedShowtime);
-    expect(result.updated).toEqual(updatedShowtime);
+  it('should throw if movie not found on update', async () => {
+    mockMoviesService.findOne.mockResolvedValue(null);
+    await expect(controller.update(10, validShowtime)).rejects.toThrow(NotFoundException);
   });
 
-  it('should delete a showtime', async () => {
+  it('should call delete()', async () => {
+    mockShowtimesService.delete.mockResolvedValue(undefined);
     await controller.delete(1);
     expect(showtimesService.delete).toHaveBeenCalledWith(1);
   });
 
-  it('should throw on invalid startTime (too old)', async () => {
-    const showtime = { ...mockShowtime, startTime: new Date('1800-01-01') };
-    expect(() => controller['validateShowtime'](showtime)).toThrow(BadRequestException);
+  // VALIDATION TESTS
+  it('should throw if movieId is NaN', () => {
+    const bad = { ...validShowtime, movieId: 'abc' } as any;
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });
 
-  it('should throw on missing price', async () => {
-    const showtime = { ...mockShowtime, price: 0 };
-    expect(() => controller['validateShowtime'](showtime)).toThrow(BadRequestException);
+  it('should throw if theater is missing', () => {
+    const bad = { ...validShowtime, theater: '' };
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });
 
-  it('should throw on invalid movieId or theaterId', () => {
-    const showtime = { ...mockShowtime, movieId: -1, theaterId: 0 };
-    expect(() => controller['validateShowtime'](showtime)).toThrow(BadRequestException);
+  it('should throw if price is missing or 0', () => {
+    const bad = { ...validShowtime, price: 0 };
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
   });
 
-  
+  it('should throw if startTime is missing', () => {
+    const bad = { ...validShowtime };
+    delete bad.startTime;
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
+
+  it('should throw if startTime is invalid', () => {
+    const bad = { ...validShowtime, startTime: 'not-a-date' } as any;
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
+
+  it('should throw if startTime is before 1900', () => {
+    const bad = { ...validShowtime, startTime: '1800-01-01T00:00:00Z' } as any;
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
+
+  it('should throw if startTime is in the past', () => {
+    const bad = { ...validShowtime, startTime: new Date(Date.now() - 10000).toISOString() }as any;
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
+
+  it('should throw if price is negative', () => {
+    const bad = { ...validShowtime, price: -10 };
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
+
+  it('should throw if movieId <= 0', () => {
+    const bad = { ...validShowtime, movieId: 0 };
+    expect(() => controller['validateShowtime'](bad)).toThrow(BadRequestException);
+  });
 });

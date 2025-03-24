@@ -15,7 +15,10 @@ describe('BookingsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BookingsController],
       providers: [
-        { provide: BookingsService, useValue: mockBookingsService },
+        {
+          provide: BookingsService,
+          useValue: mockBookingsService,
+        },
       ],
     }).compile();
 
@@ -31,38 +34,32 @@ describe('BookingsController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('createBooking()', () => {
-    const validBody = {
-      showtimeId: 1,
-      seatNumber: 5,
-      userId: 'user-123',
-    };
+  it('should call bookingsService.create with valid input', async () => {
+    const dto = { showtimeId: 1, seatNumber: 10, userId: 'user123' };
+    const mockResponse = { bookingId: 42 };
 
-    it('should create a booking and return bookingId', async () => {
-      const mockResponse = { bookingId: 'mock-id' };
-      mockBookingsService.create.mockResolvedValue(mockResponse);
+    mockBookingsService.create.mockResolvedValue(mockResponse);
 
-      const result = await controller.createBooking(validBody);
-      expect(result).toEqual(mockResponse);
-      expect(mockBookingsService.create).toHaveBeenCalledWith(validBody);
-    });
+    const result = await controller.createBooking(dto);
+    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(result).toBe(mockResponse);
+  });
 
-    it('should throw if showtimeId is missing', async () => {
-      await expect(
-        controller.createBooking({ ...validBody, showtimeId: undefined as any })
-      ).rejects.toThrow(BadRequestException);
-    });
+  it('should throw BadRequestException for missing showtimeId', async () => {
+    const dto = { seatNumber: 10, userId: 'user123' } as any;
 
-    it('should throw if seatNumber is missing', async () => {
-      await expect(
-        controller.createBooking({ ...validBody, seatNumber: undefined as any })
-      ).rejects.toThrow(BadRequestException);
-    });
+    await expect(controller.createBooking(dto)).rejects.toThrow(BadRequestException);
+  });
 
-    it('should throw if userId is missing', async () => {
-      await expect(
-        controller.createBooking({ ...validBody, userId: undefined as any })
-      ).rejects.toThrow(BadRequestException);
-    });
+  it('should throw BadRequestException for invalid seatNumber', async () => {
+    const dto = { showtimeId: 1, seatNumber: 0, userId: 'user123' };
+
+    await expect(controller.createBooking(dto)).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException for invalid userId', async () => {
+    const dto = { showtimeId: 1, seatNumber: 10, userId: ' ' };
+
+    await expect(controller.createBooking(dto)).rejects.toThrow(BadRequestException);
   });
 });

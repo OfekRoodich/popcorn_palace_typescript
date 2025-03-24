@@ -3,162 +3,109 @@ import { MoviesService } from './movies.service';
 import { Movie } from './movie.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+
+const mockRepository = () => ({
+  find: jest.fn(),
+  findOne: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+});
 
 describe('MoviesService', () => {
   let service: MoviesService;
-  let repo: Repository<Movie>;
+  let repo: jest.Mocked<Repository<Movie>>;
 
-  const mockMovieRepository = {
-    find: jest.fn(),
-    findOne: jest.fn(),
-    save: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
+  const mockMovie: Movie = {
+    id: 1,
+    title: 'Inception',
+    genre: 'Sci-Fi',
+    duration: 148,
+    rating: 8.8,
+    releaseYear: 2010,
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MoviesService,
-        {
-          provide: getRepositoryToken(Movie),
-          useValue: mockMovieRepository,
-        },
+        { provide: getRepositoryToken(Movie), useFactory: mockRepository },
       ],
     }).compile();
 
     service = module.get<MoviesService>(MoviesService);
-    repo = module.get<Repository<Movie>>(getRepositoryToken(Movie));
+    repo = module.get(getRepositoryToken(Movie));
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('should return all movies', async () => {
+    repo.find.mockResolvedValue([mockMovie]);
+    const movies = await service.findAll();
+    expect(movies).toEqual([mockMovie]);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  it('should find a movie by id', async () => {
+    repo.findOne.mockResolvedValue(mockMovie);
+    const movie = await service.findOne(1);
+    expect(movie).toEqual(mockMovie);
   });
 
-  describe('findAll', () => {
-    it('should return all movies', async () => {
-      const mockMovies = [{ id: 1, title: 'Test Movie' }] as Movie[];
-      mockMovieRepository.find.mockResolvedValue(mockMovies);
-
-      const result = await service.findAll();
-      expect(result).toEqual(mockMovies);
-      expect(mockMovieRepository.find).toHaveBeenCalled();
-    });
-
-    it('should return empty array if no movies found', async () => {
-      mockMovieRepository.find.mockResolvedValue([]);
-      const result = await service.findAll();
-      expect(result).toEqual([]);
-    });
-
-    it('should throw if repository fails', async () => {
-      mockMovieRepository.find.mockRejectedValue(new Error('DB error'));
-      await expect(service.findAll()).rejects.toThrow('DB error');
-    });
+  it('should return null if movie not found by id', async () => {
+    repo.findOne.mockResolvedValue(null);
+    const movie = await service.findOne(999);
+    expect(movie).toBeNull();
   });
 
-  describe('findOne', () => {
-    it('should return a movie by ID', async () => {
-      const mockMovie = { id: 1, title: 'Test Movie' } as Movie;
-      mockMovieRepository.findOne.mockResolvedValue(mockMovie);
-
-      const result = await service.findOne(1);
-      expect(result).toEqual(mockMovie);
-      expect(mockMovieRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
-    });
-
-    it('should return null if not found', async () => {
-      mockMovieRepository.findOne.mockResolvedValue(null);
-      const result = await service.findOne(999);
-      expect(result).toBeNull();
-    });
-
-    it('should throw if findOne fails', async () => {
-      mockMovieRepository.findOne.mockRejectedValue(new Error('Find failed'));
-      await expect(service.findOne(1)).rejects.toThrow('Find failed');
-    });
+  it('should find a movie by title', async () => {
+    repo.findOne.mockResolvedValue(mockMovie);
+    const movie = await service.findByTitle('Inception');
+    expect(movie).toEqual(mockMovie);
   });
 
-  describe('findByTitle', () => {
-    it('should return movie by title', async () => {
-      const mockMovie = { id: 1, title: 'Test Movie' } as Movie;
-      mockMovieRepository.findOne.mockResolvedValue(mockMovie);
-
-      const result = await service.findByTitle('Test Movie');
-      expect(result).toEqual(mockMovie);
-      expect(mockMovieRepository.findOne).toHaveBeenCalledWith({ where: { title: 'Test Movie' } });
-    });
-
-    it('should return null if not found', async () => {
-      mockMovieRepository.findOne.mockResolvedValue(null);
-      const result = await service.findByTitle('Not Found');
-      expect(result).toBeNull();
-    });
+  it('should create a new movie', async () => {
+    repo.save.mockResolvedValue(mockMovie);
+    const movie = await service.create({ title: 'Inception', duration: 148, rating: 8.8, releaseYear: 2010 });
+    expect(movie).toEqual(mockMovie);
+    expect(repo.save).toHaveBeenCalledWith({ title: 'Inception', duration: 148, rating: 8.8, releaseYear: 2010 });
   });
 
-  describe('create', () => {
-    it('should create and return a new movie', async () => {
-      const newMovie = { title: 'New Movie' };
-      const savedMovie = { id: 1, ...newMovie };
-      mockMovieRepository.save.mockResolvedValue(savedMovie);
-
-      const result = await service.create(newMovie);
-      expect(result).toEqual(savedMovie);
-      expect(mockMovieRepository.save).toHaveBeenCalledWith(newMovie);
-    });
-
-    it('should throw if save fails', async () => {
-      mockMovieRepository.save.mockRejectedValue(new Error('Save failed'));
-      await expect(service.create({ title: 'Error' })).rejects.toThrow('Save failed');
-    });
+  it('should throw an error if creating movie with invalid data', async () => {
+    await expect(service.create({ title: '', duration: -10, rating: 11, releaseYear: 2050 }))
+      .rejects
+      .toThrow(BadRequestException);
   });
 
-  describe('update', () => {
-    it('should update and return result', async () => {
-      const updateData = { title: 'Updated Title' };
-      mockMovieRepository.update.mockResolvedValue({ affected: 1 });
-
-      const result = await service.update(1, updateData);
-      expect(result).toEqual({ affected: 1 });
-      expect(mockMovieRepository.update).toHaveBeenCalledWith(1, updateData);
+  it('should update a movie', async () => {
+    repo.update.mockResolvedValue({
+      affected: 1,
+      raw: {},
+      generatedMaps: [],
     });
+  
+    const validMovie = {
+      title: 'Updated Title',
+      duration: 120,
+      rating: 9.0,
+      releaseYear: 2020,
+    };
+  
+    const result = await service.update(1, validMovie);
+  
+    expect(repo.update).toHaveBeenCalledWith(1, validMovie);
+    expect(result.affected).toBe(1);
+  });
+  
 
-    it('should return 0 affected if movie not found', async () => {
-      mockMovieRepository.update.mockResolvedValue({ affected: 0 });
-
-      const result = await service.update(999, { title: 'Nothing' });
-      expect(result).toEqual({ affected: 0 });
-    });
-
-    it('should throw if update fails', async () => {
-      mockMovieRepository.update.mockRejectedValue(new Error('Update failed'));
-      await expect(service.update(1, { title: 'Test' })).rejects.toThrow('Update failed');
-    });
+  it('should throw an error if updating movie with invalid data', async () => {
+    await expect(service.update(1, { title: '', duration: 0 }))
+      .rejects
+      .toThrow(BadRequestException);
   });
 
-  describe('delete', () => {
-    it('should delete and return result', async () => {
-      mockMovieRepository.delete.mockResolvedValue({ affected: 1 });
-
-      const result = await service.delete(1);
-      expect(result).toEqual({ affected: 1 });
-      expect(mockMovieRepository.delete).toHaveBeenCalledWith(1);
-    });
-
-    it('should return 0 affected if movie not found', async () => {
-      mockMovieRepository.delete.mockResolvedValue({ affected: 0 });
-
-      const result = await service.delete(123);
-      expect(result).toEqual({ affected: 0 });
-    });
-
-    it('should throw if delete fails', async () => {
-      mockMovieRepository.delete.mockRejectedValue(new Error('Delete failed'));
-      await expect(service.delete(1)).rejects.toThrow('Delete failed');
-    });
+  it('should delete a movie', async () => {
+    repo.delete.mockResolvedValue({ affected: 1, raw: {} });
+    const result = await service.delete(1);
+    expect(repo.delete).toHaveBeenCalledWith(1);
+    expect(result.affected).toBe(1);
   });
 });

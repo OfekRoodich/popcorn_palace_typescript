@@ -22,7 +22,6 @@ describe('Main Bootstrap', () => {
   });
 
   it('should bootstrap and start listening', async () => {
-    // Import dynamically to run bootstrap after mocks are set
     await import('./main');
 
     expect(NestFactory.create).toHaveBeenCalledWith(AppModule);
