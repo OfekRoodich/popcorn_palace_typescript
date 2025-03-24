@@ -48,7 +48,7 @@ describe('ShowtimesController', () => {
       movieId: 1,
       theaterId: 2,
       price: 50,
-      startTime: new Date('2025-02-14T11:47:46.125Z'),
+      startTime: new Date(Date.now() + 1000 * 60 * 10), 
     };
 
     it('should throw a BadRequestException if update fails due to booking conflict', async () => {
