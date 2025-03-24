@@ -1,131 +1,98 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ShowtimesService } from '../showtimes/showtimes.service';
+import { BookingsService } from './bookings.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Booking } from './booking.entity';
 import { Showtime } from '../showtimes/showtime.entity';
-import { Theater } from '../theaters/theater.entity';
-import { Movie } from '../movies/movie.entity';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 
-const mockRepository = () => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  createQueryBuilder: jest.fn(() => ({
-    leftJoinAndSelect: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    getCount: jest.fn().mockResolvedValue(0),
-    getMany: jest.fn().mockResolvedValue([]),
-  })),
-});
-
-describe('ShowtimesService', () => {
-  let service: ShowtimesService;
+describe('BookingsService', () => {
+  let service: BookingsService;
+  let bookingRepo: jest.Mocked<Repository<Booking>>;
   let showtimeRepo: jest.Mocked<Repository<Showtime>>;
-  let theaterRepo: jest.Mocked<Repository<Theater>>;
-  let movieRepo: jest.Mocked<Repository<Movie>>;
+
+  const mockRepository = () => ({
+    find: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ShowtimesService,
+        BookingsService,
+        { provide: getRepositoryToken(Booking), useFactory: mockRepository },
         { provide: getRepositoryToken(Showtime), useFactory: mockRepository },
-        { provide: getRepositoryToken(Theater), useFactory: mockRepository },
-        { provide: getRepositoryToken(Movie), useFactory: mockRepository },
       ],
     }).compile();
 
-    service = module.get(ShowtimesService);
+    service = module.get(BookingsService);
+    bookingRepo = module.get(getRepositoryToken(Booking));
     showtimeRepo = module.get(getRepositoryToken(Showtime));
-    theaterRepo = module.get(getRepositoryToken(Theater));
-    movieRepo = module.get(getRepositoryToken(Movie));
   });
 
-  it('should return all showtimes with movie and theater', async () => {
-    const showtimes = [{ id: 1 } as Showtime];
-    showtimeRepo.find.mockResolvedValue(showtimes);
+  it('should book a seat successfully', async () => {
+    const showtime = {
+      id: 1,
+      seatMatrix: [[0, 0], [0, 0]],
+      bookedCount: 0,
+    } as Showtime;
 
-    const result = await service.findAll();
-    expect(result).toBe(showtimes);
-  });
+    showtimeRepo.findOne.mockResolvedValue(showtime);
 
-  it('should create a showtime successfully', async () => {
-    const theater = { id: 1, numberOfRows: 2, numberOfColumns: 2 };
-    const movie = { id: 1, duration: 90 };
-    const data = { theaterId: 1, movieId: 1, startTime: new Date(), price: 20 };
-
-    theaterRepo.findOne.mockResolvedValue(theater as Theater);
-    movieRepo.findOne.mockResolvedValue(movie as Movie);
-    showtimeRepo.create.mockReturnValue({ id: 1 } as Showtime);
-    showtimeRepo.save.mockResolvedValue({ id: 1 } as Showtime);
-    showtimeRepo.findOne.mockResolvedValue({ id: 1 } as Showtime);
-
-    const result = await service.create(data);
-    expect(result.id).toBe(1);
-  });
-
-  it('should throw error if theater not found', async () => {
-    theaterRepo.findOne.mockResolvedValue(null);
-    await expect(service.create({ theaterId: 1 } as any)).rejects.toThrow('Theater not found');
-  });
-
-  it('should throw BadRequestException on overlapping showtime', async () => {
-    const theater = { id: 1, numberOfRows: 2, numberOfColumns: 2 };
-    const movie = { id: 1, duration: 90 };
-    const data = { theaterId: 1, movieId: 1, startTime: new Date(), price: 20 };
-  
-    theaterRepo.findOne.mockResolvedValue(theater as Theater);
-    movieRepo.findOne.mockResolvedValue(movie as Movie);
-  
-    const mockQueryBuilder: any = {
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getCount: jest.fn().mockResolvedValue(1), // Force overlap
+    const mockBooking: Booking = {
+      bookingId: '1',
+      seatNumber: 1,
+      showtimeId: 1,
+      userId: 'user123',
+      showtime: showtime,
     };
-  
-    (showtimeRepo.createQueryBuilder as jest.Mock).mockReturnValue(mockQueryBuilder);
-  
-    // Prevent .save() from being called
-    showtimeRepo.create.mockReturnValue({} as Showtime);
-    showtimeRepo.save.mockImplementation(() => {
-      throw new Error('❌ save should not be called on overlap');
-    });
-  
-    await expect(service.create(data)).rejects.toThrow(BadRequestException);
-    expect(showtimeRepo.save).not.toHaveBeenCalled();
+
+    bookingRepo.create.mockReturnValue(mockBooking);
+    bookingRepo.save.mockResolvedValue(mockBooking);
+    showtimeRepo.save.mockResolvedValue(showtime);
+
+    const result = await service.create({ showtimeId: 1, seatNumber: 1, userId: 'user123' });
+
+    expect(showtimeRepo.save).toHaveBeenCalled();
+    expect(bookingRepo.save).toHaveBeenCalled();
+    expect(result).toEqual({ bookingId: '1' });
   });
-  
 
-  it('should throw error when changing theater with booked tickets', async () => {
-    showtimeRepo.findOne.mockResolvedValue({
-      id: 1,
-      theater: { id: 1 },
-      movie: { id: 1 },
-      bookedCount: 5,
-    } as Showtime);
+  it('should throw if showtime not found', async () => {
+    showtimeRepo.findOne.mockResolvedValue(null);
 
-    await expect(service.update(1, { theaterId: 2 })).rejects.toThrow(
-      '⚠️ Cannot change theater for a showtime with booked tickets.'
+    await expect(service.create({ showtimeId: 999, seatNumber: 0, userId: 'user' })).rejects.toThrow(
+      'Showtime 999 not found'
     );
   });
 
-  it('should throw if trying to book already-booked seat', async () => {
-    showtimeRepo.findOne.mockResolvedValue({
+  it('should throw for invalid seat number', async () => {
+    const showtime = {
       id: 1,
-      seatMatrix: [[0, 2], [0, 0]],
-    } as Showtime);
+      seatMatrix: [[0, 0], [0, 0]],
+    } as Showtime;
 
-    await expect(service.updateSeatMatrix(1, [[0, 1]])).rejects.toThrow(
-      '⚠️ Seat 2 on row 1 is already booked.'
+    showtimeRepo.findOne.mockResolvedValue(showtime);
+
+    await expect(service.create({ showtimeId: 1, seatNumber: 10, userId: 'user' })).rejects.toThrow(
+      'Invalid seat number: 10'
     );
   });
 
-  it('should delete showtime', async () => {
-    await service.delete(1);
-    expect(showtimeRepo.delete).toHaveBeenCalledWith(1);
+  it('should throw if seat is already booked', async () => {
+    const showtime = {
+      id: 1,
+      seatMatrix: [[2, 0], [0, 0]],
+    } as Showtime;
+
+    showtimeRepo.findOne.mockResolvedValue(showtime);
+
+    await expect(service.create({ showtimeId: 1, seatNumber: 0, userId: 'user' })).rejects.toThrow(
+      '⚠️ Seat 1 on row 1 is already booked.'
+    );
   });
 });

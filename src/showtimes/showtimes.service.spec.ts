@@ -39,7 +39,7 @@ describe('ShowtimesService', () => {
     movieRepo = module.get(getRepositoryToken(Movie));
   });
 
-  function mockOverlapQueryBuilder(count: number) {
+  function mockOverlap(count: number) {
     const qb: any = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -61,7 +61,7 @@ describe('ShowtimesService', () => {
     const movie = { id: 1, duration: 90 };
     const data = { theaterId: 1, movieId: 1, startTime: new Date(), price: 20 };
 
-    mockOverlapQueryBuilder(0);
+    mockOverlap(0);
 
     theaterRepo.findOne.mockResolvedValue(theater as Theater);
     movieRepo.findOne.mockResolvedValue(movie as Movie);
@@ -83,20 +83,13 @@ describe('ShowtimesService', () => {
     const movie = { id: 1, duration: 90 };
     const data = { theaterId: 1, movieId: 1, startTime: new Date(), price: 20 };
 
-    const mockQueryBuilder: any = {
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getCount: jest.fn().mockResolvedValue(1),
-    };
-
-    (showtimeRepo.createQueryBuilder as jest.Mock).mockReturnValue(mockQueryBuilder);
+    mockOverlap(1);
 
     theaterRepo.findOne.mockResolvedValue(theater as Theater);
     movieRepo.findOne.mockResolvedValue(movie as Movie);
-
     showtimeRepo.create.mockReturnValue({} as Showtime);
     showtimeRepo.save.mockImplementation(() => {
-      throw new Error('❌ save should not be called when there is overlap');
+      throw new Error('❌ save should not be called');
     });
 
     await expect(service.create(data)).rejects.toThrow(BadRequestException);
@@ -116,6 +109,58 @@ describe('ShowtimesService', () => {
     );
   });
 
+  it('should update showtime movie and startTime and recalculate endTime', async () => {
+    const existing = {
+      id: 1,
+      startTime: new Date(),
+      movie: { id: 1, duration: 100 },
+      theater: { id: 1 },
+      bookedCount: 0,
+    } as Showtime;
+
+    const newMovie = { id: 2, duration: 120 } as Movie;
+    const updatedStart = new Date('2025-04-01T15:00:00');
+
+    showtimeRepo.findOne.mockResolvedValue(existing);
+    movieRepo.findOne.mockResolvedValue(newMovie);
+    mockOverlap(0);
+
+    await service.update(1, {
+      movieId: 2,
+      startTime: updatedStart,
+    });
+
+    expect(showtimeRepo.update).toHaveBeenCalledWith(1, expect.objectContaining({
+      movie: { id: 2 },
+      startTime: updatedStart,
+      endTime: new Date(updatedStart.getTime() + 120 * 60000),
+    }));
+  });
+
+  it('should update theater if no tickets are booked', async () => {
+    const existing = {
+      id: 1,
+      startTime: new Date(),
+      movie: { id: 1, duration: 100 },
+      theater: { id: 1 },
+      bookedCount: 0,
+    } as Showtime;
+
+    const newTheater = { id: 2, numberOfRows: 2, numberOfColumns: 2 } as Theater;
+
+    showtimeRepo.findOne.mockResolvedValue(existing);
+    theaterRepo.findOne.mockResolvedValue(newTheater);
+    mockOverlap(0);
+
+    await service.update(1, { theaterId: 2 });
+
+    expect(showtimeRepo.update).toHaveBeenCalledWith(1, expect.objectContaining({
+      theater: { id: 2 },
+      seatMatrix: [[0, 0], [0, 0]],
+      bookedCount: 0,
+    }));
+  });
+
   it('should throw if trying to book already-booked seat', async () => {
     showtimeRepo.findOne.mockResolvedValue({
       id: 1,
@@ -124,6 +169,31 @@ describe('ShowtimesService', () => {
 
     await expect(service.updateSeatMatrix(1, [[0, 1]])).rejects.toThrow(
       '⚠️ Seat 2 on row 1 is already booked.'
+    );
+  });
+
+  it('should book seats and update bookedCount correctly', async () => {
+    const showtime = {
+      id: 1,
+      seatMatrix: [[0, 0], [0, 0]],
+    } as Showtime;
+
+    showtimeRepo.findOne.mockResolvedValue(showtime);
+    showtimeRepo.update.mockResolvedValue({} as any);
+
+    await service.updateSeatMatrix(1, [[0, 0], [1, 1]]);
+
+    expect(showtimeRepo.update).toHaveBeenCalledWith(1, {
+      seatMatrix: [[2, 0], [0, 2]],
+      bookedCount: 2,
+    });
+  });
+
+  it('should throw if showtime not found when updating seatMatrix', async () => {
+    showtimeRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.updateSeatMatrix(999, [[0, 0]])).rejects.toThrow(
+      'Showtime 999 not found'
     );
   });
 

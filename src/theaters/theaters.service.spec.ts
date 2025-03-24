@@ -1,21 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TheatersService } from './theaters.service';
-import { Theater } from './theater.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { Theater } from './theater.entity';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+
+const mockRepo = {
+  find: jest.fn(),
+  findOne: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
 
 describe('TheatersService', () => {
   let service: TheatersService;
-  let repo: Repository<Theater>;
-
-  const mockTheaterRepository = {
-    find: jest.fn(),
-    save: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    findOne: jest.fn(),
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,13 +21,12 @@ describe('TheatersService', () => {
         TheatersService,
         {
           provide: getRepositoryToken(Theater),
-          useValue: mockTheaterRepository,
+          useValue: mockRepo,
         },
       ],
     }).compile();
 
     service = module.get<TheatersService>(TheatersService);
-    repo = module.get<Repository<Theater>>(getRepositoryToken(Theater));
   });
 
   afterEach(() => {
@@ -41,59 +38,117 @@ describe('TheatersService', () => {
   });
 
   it('should return all theaters', async () => {
-    const mockTheaters = [{ id: 1, name: 'Main Hall' }] as Theater[];
-    mockTheaterRepository.find.mockResolvedValue(mockTheaters);
-
+    const theaters = [{ id: 1, name: 'Test', numberOfRows: 3, numberOfColumns: 5 }];
+    mockRepo.find.mockResolvedValue(theaters);
     const result = await service.findAll();
-    expect(result).toEqual(mockTheaters);
-    expect(mockTheaterRepository.find).toHaveBeenCalled();
+    expect(result).toEqual(theaters);
+  });
+
+  it('should throw for invalid ID in findOne', async () => {
+    await expect(service.findOne(-1)).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw if theater not found', async () => {
+    mockRepo.findOne.mockResolvedValue(null);
+    await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should return theater by ID', async () => {
+    const theater = { id: 1, name: 'T1', numberOfRows: 5, numberOfColumns: 5 };
+    mockRepo.findOne.mockResolvedValue(theater);
+    const result = await service.findOne(1);
+    expect(result).toEqual(theater);
   });
 
   it('should create a theater', async () => {
-    const input = { name: 'New Theater', numberOfRows: 5, numberOfColumns: 10 };
-    const saved = { id: 1, ...input };
-    mockTheaterRepository.save.mockResolvedValue(saved);
-
-    const result = await service.create(input);
-    expect(result).toEqual(saved);
-    expect(mockTheaterRepository.save).toHaveBeenCalledWith(input);
+    const newTheater = { name: 'T1', numberOfRows: 5, numberOfColumns: 5 };
+    mockRepo.save.mockResolvedValue({ id: 1, ...newTheater });
+    const result = await service.create(newTheater);
+    expect(result).toEqual({ id: 1, ...newTheater });
   });
 
-  it('should find a theater by ID', async () => {
-    const mockTheater = { id: 1, name: 'Found Theater' } as Theater;
-    mockTheaterRepository.findOne.mockResolvedValue(mockTheater);
+  it('should throw for empty theater name on create', async () => {
+    await expect(
+      service.create({ name: '', numberOfRows: 5, numberOfColumns: 5 }),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    const result = await service.findOne(1);
-    expect(result).toEqual(mockTheater);
-    expect(mockTheaterRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+  it('should throw for invalid numberOfRows on create', async () => {
+    await expect(
+      service.create({ name: 'T1', numberOfRows: 0, numberOfColumns: 5 }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw for invalid numberOfColumns on create', async () => {
+    await expect(
+      service.create({ name: 'T1', numberOfRows: 5, numberOfColumns: -1 }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should update a theater', async () => {
-    const updateData = { name: 'Updated Theater', numberOfRows: 10, numberOfColumns: 15 };
-    mockTheaterRepository.findOne.mockResolvedValue({ id: 1, ...updateData });
-    mockTheaterRepository.update.mockResolvedValue({ affected: 1 });
+    const updated = { name: 'Updated Theater', numberOfRows: 5, numberOfColumns: 6 };
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    mockRepo.update.mockResolvedValue({ affected: 1 });
 
-    const result = await service.update(1, updateData);
+    const result = await service.update(1, updated);
     expect(result).toEqual({ affected: 1 });
   });
 
-  it('should throw NotFoundException when updating non-existent theater', async () => {
-    mockTheaterRepository.findOne.mockResolvedValue(null);
+  it('should throw NotFoundException if theater does not exist on update', async () => {
+    mockRepo.findOne.mockResolvedValue(null);
+    await expect(service.update(1, { name: 'Updated' })).rejects.toThrow(NotFoundException);
+  });
 
-    await expect(service.update(1, { name: 'Fail' })).rejects.toThrow(NotFoundException);
+  it('should throw for empty name on update', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    await expect(service.update(1, { name: '   ' })).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw for invalid numberOfRows on update', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    await expect(service.update(1, { name: 'Valid', numberOfRows: 0 }))
+      .rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw for invalid numberOfColumns on update', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    await expect(service.update(1, { name: 'Valid', numberOfColumns: -1 }))
+      .rejects.toThrow(BadRequestException);
   });
 
   it('should delete a theater', async () => {
-    mockTheaterRepository.findOne.mockResolvedValue({ id: 1 });
-    mockTheaterRepository.delete.mockResolvedValue({ affected: 1 });
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    mockRepo.delete.mockResolvedValue({ affected: 1 });
 
     const result = await service.delete(1);
     expect(result).toEqual({ affected: 1 });
   });
 
-  it('should throw NotFoundException when deleting non-existent theater', async () => {
-    mockTheaterRepository.findOne.mockResolvedValue(null);
+  it('should throw BadRequestException for invalid ID on delete', async () => {
+    await expect(service.delete(0)).rejects.toThrow(BadRequestException);
+  });
 
+  it('should throw NotFoundException if theater not found on delete', async () => {
+    mockRepo.findOne.mockResolvedValue(null);
     await expect(service.delete(1)).rejects.toThrow(NotFoundException);
   });
+
+  it('should call delete with correct ID', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    mockRepo.delete.mockResolvedValue({ affected: 1 });
+
+    await service.delete(1);
+    expect(mockRepo.delete).toHaveBeenCalledWith(1);
+  });
+
+  it('should allow valid undefined numberOfRows on update', async () => {
+    mockRepo.findOne.mockResolvedValue({ id: 1 });
+    mockRepo.update.mockResolvedValue({ affected: 1 });
+  
+    // numberOfRows is undefined — should skip validation
+    const result = await service.update(1, { name: 'Updated' });
+    expect(result).toEqual({ affected: 1 });
+  });
+
+  
 });

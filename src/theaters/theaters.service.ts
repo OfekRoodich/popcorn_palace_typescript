@@ -60,9 +60,10 @@ export class TheatersService {
       throw new NotFoundException(`Theater with ID ${id} not found`);
     }
 
-    if (!theater.name || !theater.name.trim) {
+    if (!theater.name || !theater.name.trim()) {
       throw new BadRequestException("⚠️ Theater name can't be empty");
     }
+      
 
     if (
       theater.numberOfRows != null &&
