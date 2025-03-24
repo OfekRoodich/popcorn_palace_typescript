@@ -118,24 +118,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
     (value) => value === "" || value === 0
   );
 
-  const validateNoOverlap = (): boolean => {
-    if (!movieDuration || !showtimeData.startTime || !showtime) return true;
-
-    const newStart = new Date(showtimeData.startTime).getTime();
-    const newEnd = newStart + movieDuration * 60000;
-
-    return !existingShowtimes.some((existing) => {
-      if (existing.id === showtime.id) return false;
-      const existingStart = new Date(existing.startTime).getTime();
-      const existingEnd = existingStart + existing.movie.duration * 60000;
-
-      return (
-        (newStart >= existingStart && newStart < existingEnd) ||
-        (newEnd > existingStart && newEnd <= existingEnd) ||
-        (newStart <= existingStart && newEnd >= existingEnd)
-      );
-    });
-  };
 
   const handleSubmit = () => {
     if (isFormInvalid) {
@@ -148,10 +130,6 @@ const EditShowtimeModal: React.FC<EditShowtimeModalProps> = ({
       return;
     }
 
-    if (!validateNoOverlap()) {
-      setError("❌ This theater is unavailable, because it already shows a movie at this time.");
-      return;
-    }
 
     handleUpdate({
       id: showtime?.id || 0,

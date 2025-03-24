@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Showtime } from './showtime.entity';
@@ -49,6 +49,11 @@ export class ShowtimesService {
     const startTime = new Date(data.startTime);
     const endTime = new Date(startTime.getTime() + movie.duration * 60000);
 
+    const isOverlap = await this.hasOverlap(theater.id, startTime, endTime);
+    if (isOverlap) {
+      throw new BadRequestException('⚠️ This theater already has a movie scheduled at that time');
+    }
+
     const showtime = this.showtimeRepository.create({
       movie: { id: data.movieId },
       theater: { id: data.theaterId },
@@ -66,48 +71,57 @@ export class ShowtimesService {
   async update(id: number, data: Partial<Showtime>): Promise<Showtime> {
     const existing = await this.showtimeRepository.findOne({ where: { id }, relations: ['theater', 'movie'] });
     if (!existing) throw new Error(`Showtime with ID ${id} not found`);
-
+  
     const updateData: any = {
       startTime: data.startTime,
       price: data.price,
     };
-
+  
     let recreateMatrix = false;
-
+    let targetTheater = existing.theater;
+  
     if (data.theaterId && data.theaterId !== existing.theater.id) {
       if (existing.bookedCount > 0) {
         throw new Error('⚠️ Cannot change theater for a showtime with booked tickets.');
       }
-
-      const newTheater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
-      if (!newTheater) throw new Error(`Theater with ID ${data.theaterId} not found`);
-
+  
+      targetTheater = await this.theaterRepository.findOne({ where: { id: data.theaterId } });
+      if (!targetTheater) throw new Error(`Theater with ID ${data.theaterId} not found`);
+  
       updateData.theater = { id: data.theaterId };
-      updateData.seatMatrix = Array.from({ length: newTheater.numberOfRows }, () =>
-        Array(newTheater.numberOfColumns).fill(0)
+      updateData.seatMatrix = Array.from({ length: targetTheater.numberOfRows }, () =>
+        Array(targetTheater.numberOfColumns).fill(0)
       );
       updateData.bookedCount = 0;
+      recreateMatrix = true;
     }
-
+  
     let movie = existing.movie;
-
+  
     if (data.movieId && data.movieId !== existing.movie.id) {
       movie = await this.movieRepository.findOne({ where: { id: data.movieId } });
       if (!movie) throw new Error(`Movie with ID ${data.movieId} not found`);
       updateData.movie = { id: data.movieId };
     }
-
+  
     if (data.startTime && movie?.duration) {
       const start = new Date(data.startTime);
-      updateData.endTime = new Date(start.getTime() + movie.duration * 60000);
+      const end = new Date(start.getTime() + movie.duration * 60000);
+  
+      const overlap = await this.hasOverlap(targetTheater.id, start, end, existing.id);
+      if (overlap) {
+        throw new BadRequestException('⚠️ This theater already has a movie scheduled at that time');
+      }
+  
+      updateData.endTime = end;
     }
-
+  
     await this.showtimeRepository.update(id, updateData);
     return this.findById(id);
   }
+  
 
   async updateSeatMatrix(id: number, selectedSeats: [number, number][]): Promise<Showtime> {
-    console.log(selectedSeats)
     const showtime = await this.showtimeRepository.findOne({ where: { id } });
     if (!showtime) throw new Error(`Showtime ${id} not found`);
 
@@ -129,5 +143,27 @@ export class ShowtimesService {
 
   async delete(id: number): Promise<void> {
     await this.showtimeRepository.delete(id);
+  }
+
+  private async hasOverlap(
+    theaterId: number,
+    startTime: Date,
+    endTime: Date,
+    excludeId?: number
+  ): Promise<boolean> {
+    const query = this.showtimeRepository
+      .createQueryBuilder('showtime')
+      .where('showtime.theaterId = :theaterId', { theaterId })
+      .andWhere('showtime.startTime < :endTime AND showtime.endTime > :startTime', {
+        startTime,
+        endTime,
+      });
+
+    if (excludeId) {
+      query.andWhere('showtime.id != :excludeId', { excludeId });
+    }
+
+    const count = await query.getCount();
+    return count > 0;
   }
 }

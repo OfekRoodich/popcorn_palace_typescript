@@ -80,23 +80,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
 
   const isFormInvalid = Object.values(showtimeData).some((value) => value === "");
 
-  const validateNoOverlap = (): boolean => {
-    if (!movieDuration || !showtimeData.startTime) return true;
 
-    const newStart = new Date(showtimeData.startTime).getTime();
-    const newEnd = newStart + movieDuration * 60000;
-
-    return !existingShowtimes.some((show) => {
-      const existingStart = new Date(show.startTime).getTime();
-      const existingEnd = existingStart + show.movie.duration * 60000;
-
-      return (
-        (newStart >= existingStart && newStart < existingEnd) ||
-        (newEnd > existingStart && newEnd <= existingEnd) ||
-        (newStart <= existingStart && newEnd >= existingEnd)
-      );
-    });
-  };
 
   const handleSubmit = () => {
     if (isFormInvalid) {
@@ -109,10 +93,7 @@ const AddShowtimeModal: React.FC<AddShowtimeModalProps> = ({ show, handleClose, 
       return;
     }
 
-    if (!validateNoOverlap()) {
-      alert("❌ This theater already has a movie scheduled at that time.");
-      return;
-    }
+
 
     handleSave({
       movieId: showtimeData.movieId,
