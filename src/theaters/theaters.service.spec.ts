@@ -145,10 +145,9 @@ describe('TheatersService', () => {
     mockRepo.findOne.mockResolvedValue({ id: 1 });
     mockRepo.update.mockResolvedValue({ affected: 1 });
   
-    // numberOfRows is undefined — should skip validation
     const result = await service.update(1, { name: 'Updated' });
     expect(result).toEqual({ affected: 1 });
   });
 
-  
+
 });
